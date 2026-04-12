@@ -1,0 +1,10 @@
+{
+  "n": 10000000,
+  "best_value": 49939325710040,
+  "solutions": [],
+  "seed_file": "seeds\\n_10000000_seed.npy",
+  "last_updated": "2026-04-11T21:34:57.625884",
+  "metadata": {
+    "algorithm": "surgical_nudge"
+  }
+}

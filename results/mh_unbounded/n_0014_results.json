@@ -1,0 +1,24 @@
+{
+  "n": 14,
+  "best_value": 64,
+  "solutions": [
+    "11111101110001",
+    "11111101110011",
+    "11111101110000",
+    "11111101110010"
+  ],
+  "last_updated": "2026-02-20T17:39:42.895938",
+  "metadata": {
+    "num_restarts": 128,
+    "iterations_per_run": 100000,
+    "min_ones": null,
+    "max_ones": null,
+    "min_zeros": null,
+    "max_zeros": null,
+    "min_density": null,
+    "max_density": null,
+    "target_density": null,
+    "total_time_seconds": 247.7438657283783,
+    "num_solutions": 4
+  }
+}

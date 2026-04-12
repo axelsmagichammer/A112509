@@ -1,0 +1,25 @@
+{
+  "bounds": [
+    {
+      "target_n": 99,
+      "K_common": 8,
+      "common_seps": [1, 2, 1, 1, 1, 1, 1, 1],
+      "block_ranges": [
+        [19, 20],
+        [16, 17],
+        [13, 14],
+        [1, 1],
+        [9, 10],
+        [2, 2],
+        [5, 6],
+        [3, 4]
+      ],
+      "min_total_1s": 80,
+      "max_total_1s": 85,
+      "max_zeros_block": 7,
+      "min_one_blocks": 11,
+      "max_one_blocks": 14,
+      "note": ""
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "n": 2000000000,
+  "score": 1999841302297432600,
+  "a_over_n_sq": 0.49996032557435816,
+  "max_lcp": 92370,
+  "ones": 1999928680,
+  "zeros": 71320,
+  "density": 0.99996434,
+  "method": "counter-pattern seed (no optimization)",
+  "timestamp": "2026-04-11T22:20:55.989653",
+  "sa_build_seconds": 400.50529240001924
+}

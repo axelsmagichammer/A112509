@@ -1,0 +1,30 @@
+{
+  "n": 19,
+  "best_value": 118,
+  "solutions": [
+    "1111111011110010101",
+    "1111111101111001010",
+    "1111111011110010100",
+    "1111111101111001000",
+    "1111111011110011000",
+    "1111111011110010001",
+    "1111111011110010000",
+    "1111111011110011010",
+    "1111111011111001010",
+    "1111111011111001000"
+  ],
+  "last_updated": "2026-02-20T19:32:09.326569",
+  "metadata": {
+    "num_restarts": 128,
+    "iterations_per_run": 100000,
+    "min_ones": null,
+    "max_ones": null,
+    "min_zeros": null,
+    "max_zeros": null,
+    "min_density": null,
+    "max_density": null,
+    "target_density": null,
+    "total_time_seconds": 371.84933614730835,
+    "num_solutions": 10
+  }
+}

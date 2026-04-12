@@ -1,0 +1,31 @@
+# Virtual environments
+.venv/
+.venv_mac/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# Output files (plots, speed tests)
+output/
+
+# Temporary / one-off scripts
+_*.py
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup copies
+results - Copy/
+
+# Large binary seed files (too big for GitHub)
+seeds/*.npy

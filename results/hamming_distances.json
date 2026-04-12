@@ -1,0 +1,56 @@
+{
+  "142": {
+    "num_solutions": 266,
+    "min": 1,
+    "max": 36,
+    "mean": 18.69
+  },
+  "143": {
+    "num_solutions": 138,
+    "min": 1,
+    "max": 34,
+    "mean": 15.88
+  },
+  "144": {
+    "num_solutions": 43,
+    "min": 1,
+    "max": 30,
+    "mean": 12.23
+  },
+  "145": {
+    "num_solutions": 6,
+    "min": 1,
+    "max": 7,
+    "mean": 3.8
+  },
+  "146": {
+    "num_solutions": 63,
+    "min": 1,
+    "max": 31,
+    "mean": 14.63
+  },
+  "147": {
+    "num_solutions": 285,
+    "min": 1,
+    "max": 34,
+    "mean": 17.69
+  },
+  "148": {
+    "num_solutions": 732,
+    "min": 1,
+    "max": 36,
+    "mean": 19.21
+  },
+  "149": {
+    "num_solutions": 1179,
+    "min": 1,
+    "max": 38,
+    "mean": 19.92
+  },
+  "150": {
+    "num_solutions": 1236,
+    "min": 1,
+    "max": 39,
+    "mean": 20.04
+  }
+}

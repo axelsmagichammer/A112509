@@ -1,0 +1,8 @@
+numpy>=1.24.0
+matplotlib>=3.7.0
+scipy>=1.10.0
+sympy>=1.12
+jupyter>=1.0.0
+notebook>=6.5.0
+ipykernel>=6.20.0
+numba>=0.58.0
