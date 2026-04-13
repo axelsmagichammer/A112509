@@ -1684,7 +1684,7 @@ def optimize(
 
 def main():
     # ── CONFIGURATION ──────────────────────────────────────────────────────
-    n                      = 100_000_000  # 100M — ~7s per SA build, ~1.2GB per worker
+    n                      = 193  # 100M — ~7s per SA build, ~1.2GB per worker
     max_seconds            = 36000      # wall-clock budget in seconds (10 hours)
     num_workers            = 14         # parallel SA evaluations (leave 2 of 16 logical cores for OS)
     top_k_collisions       = 30         # worst collisions to inspect per step

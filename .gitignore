@@ -1,3 +1,6 @@
+# Paper (not ready to publish)
+paper/
+
 # Virtual environments
 .venv/
 .venv_mac/
@@ -29,3 +32,7 @@ results - Copy/
 
 # Large binary seed files (too big for GitHub)
 seeds/*.npy
+# Large plain-text seeds (too big for GitHub)
+seeds/n_10000000_seed.txt
+# RLE-encoded seeds are small enough to commit
+!seeds/*.rle.txt
