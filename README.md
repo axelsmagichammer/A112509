@@ -53,9 +53,9 @@ Two simple bounds bracket the asymptotic growth rate of a(n).
 
 ### Upper bound
 
-**Theorem.** For all n ≥ 1, a(n) ≤ n(n+1)/2 + 1, and therefore lim sup a(n)/n² ≤ 1/2.
+**Theorem.** For all n ≥ 1, a(n) ≤ n(n+1)/2, and therefore lim sup a(n)/n² ≤ 1/2.
 
-**Proof.** Two substrings represent the same integer if and only if they are identical after stripping leading zeros. Consequently, every distinct positive integer value corresponds to a unique substring beginning with `1`. An n-bit string has at most n(n+1)/2 substrings in total, so there are at most that many distinct positive values. Adding the value 0 (present whenever the string contains a `0` bit, contributing one additional integer) gives a(n) ≤ n(n+1)/2 + 1. Dividing by n² and taking the limit gives the stated bound.
+**Proof.** Two substrings represent the same integer if and only if they are identical after stripping leading zeros. Consequently, every distinct positive integer value corresponds to a unique substring beginning with `1`. There are two cases. If the string contains at least one `0` bit, then 0 is also represented, but by substrings beginning with `0`; at least one of the n(n+1)/2 substrings begins with `0`, so the number of leading-`1` substrings is at most n(n+1)/2 − 1, giving at most (n(n+1)/2 − 1) + 1 = n(n+1)/2 distinct values. If the string is all ones, there is no value 0, so distinct values equals distinct positive values ≤ n(n+1)/2. In either case a(n) ≤ n(n+1)/2. Dividing by n² and taking the limit gives the stated bound.
 
 ### Lower bound
 
