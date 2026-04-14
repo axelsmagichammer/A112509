@@ -2,7 +2,7 @@
 paper/A112509_paper.tex
 
 # Paper compiled/auxiliary outputs
-paper/*.pdf
+paper/A112509_paper.pdf
 paper/*.aux
 paper/*.log
 paper/*.out
