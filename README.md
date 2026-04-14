@@ -40,7 +40,7 @@ a(n): 1   3   5   7  10  13  17  22  27  33  40  47  55  64  73  83  94 106 118 
 
 ## Key Findings
 
-- **Asymptotic growth**: a(n)/n² approaches a constant 0.5
+- **Asymptotic growth**: lim a(n)/n² = 1/2 (proved — see [Clare (2026)](paper/A112509_asymptotic.pdf))
 - **Optimal string structure**: all optimal strings start with a long block of 1s, followed by decreasing 1-blocks separated by short 0-blocks, and the zero-separator prefix always begins `[1, 2, 1, ...]` and grows with n (K_common ≈ 3 at n = 30, 8 at n = 81–103, 14 at n = 150)
 - **De Bruijn connection**: the minimum de Bruijn order k for an optimal string equals its leading 1-block length (proved for all n ≤ 150)
 - **Lower bounds at scale**: a(1,000,000,000) ≥ 499,943,911,277,037,650
@@ -71,13 +71,15 @@ The total is f(s) = x + 1 + xy = x(n − x + 1) + 1. Setting x = ⌊n/2⌋ gives
 
 ### Combining the bounds
 
-Together these give 1/4 + O(1/n) ≤ a(n)/n² ≤ 1/2 + O(1/n). The lower bound is already tight for small n (for n = 4 it gives a(4) ≥ 7, which is exact), but far from tight in general. The project's central conjecture, supported by extensive numerical evidence, is:
+Together these give 1/4 + O(1/n) ≤ a(n)/n² ≤ 1/2 + O(1/n). The elementary lower bound is far from tight in general. The tight asymptotic is established in the companion paper:
 
-> **Conjecture.** lim a(n)/n² = 1/2.
+> **Theorem** (Clare, 2026). lim a(n)/n² = 1/2.
+
+The proof constructs an explicit family of strings achieving a(n) ≥ n²/2 − O(n^{5/3}), matching the upper bound to leading order. See [A112509_asymptotic.pdf](paper/A112509_asymptotic.pdf) for the full proof.
 
 ## Asymptotic Numerical Evidence
 
-The following certified lower bounds, computed using the surgical nudge algorithm on optimised seeds, give very strong numerical support for the conjecture:
+The following certified lower bounds, computed using the surgical nudge algorithm on optimised seeds, confirm the proved limit and illustrate the rate of convergence:
 
 | n | Lower bound on a(n) | a(n)/n² ≥ |
 | --- | --- | --- |
@@ -87,7 +89,7 @@ The following certified lower bounds, computed using the surgical nudge algorith
 | 1,000,000,000 | 499,943,911,277,037,650 | 0.49994 |
 | 2,000,000,000 | 1,999,841,302,297,432,600 | 0.49996 |
 
-The computation at n = 2 × 10⁹ required scoring a two-billion-bit string (approximately 238 MB as a NumPy boolean array) using the `pydivsufsort` C library. The ratio a(n)/n² converges rapidly towards 0.5 and is within 0.004% of 1/2 at n = 2 × 10⁹.
+The computation at n = 2 × 10⁹ required scoring a two-billion-bit string (approximately 238 MB as a NumPy boolean array) using the `pydivsufsort` C library. The ratio a(n)/n² converges rapidly to the proved limit of 1/2 and is within 0.004% at n = 2 × 10⁹.
 
 For exact values up to n = 150, the ratios are:
 
@@ -288,7 +290,7 @@ For large, even a single suffix-array score evaluation takes tens of seconds, ma
 
 At each step the algorithm identifies the highest-LCP collision: the pair of adjacent suffixes in sorted order with the largest LCP value. This pair represents the most costly duplication: two long substrings that happen to be identical, each wasting LCP positions that could contribute new distinct values. A small neighbourhood of bit positions around the collision point is then searched for a density-preserving swap (flip a 0→1 and a 1→0 simultaneously, preserving the total number of 1-bits) that breaks the collision.
 
-Candidate swaps are evaluated in parallel across a worker process pool sharing a memory-mapped copy of the incumbent bit array. Because every accepted swap strictly increases the exact score, the final value is a rigorous certified lower bound. At n = 2 × 10⁹ a lower bound was found a(n)/n² ≥ 0.49996, establishing that the limiting constant is extremely close to 1/2.
+Candidate swaps are evaluated in parallel across a worker process pool sharing a memory-mapped copy of the incumbent bit array. Because every accepted swap strictly increases the exact score, the final value is a rigorous certified lower bound. At n = 2 × 10⁹ a lower bound a(n)/n² ≥ 0.49996 was found, consistent with the proved limit of exactly 1/2.
 
 ---
 
@@ -769,7 +771,7 @@ Bold entries mark occurrences of Δ²a(n) = 2. Values for n ≤ 150 are exact fr
 
 The following open problems are suggested by the computational findings.
 
-**(i) Asymptotic.** Prove or disprove conjecture lim a(n)/n² = 1/2. Improving the lower bound significantly would be progress.
+**(i) Asymptotic rate.** The limit lim a(n)/n² = 1/2 is proved (Clare, 2026). The open question is the exact sub-leading term: the construction gives a(n) ≥ n²/2 − O(n^{5/3}), but the true second-order coefficient is unknown.
 
 **(ii) Separator structure.** Prove or disprove that the zero-separator sequence (1, 2, 1, 1, ...) is universal for all sufficiently large n. Can the full separator sequence be determined analytically? The second separator being 2 while all others are 1 is a highly non-trivial constraint whose origin is not understood.
 

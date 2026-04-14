@@ -1,5 +1,16 @@
-# Paper (not ready to publish)
-paper/
+# Main paper (not ready to publish)
+paper/A112509_paper.tex
+
+# Paper compiled/auxiliary outputs
+paper/*.pdf
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+paper/*.synctex.gz
+paper/*.fdb_latexmk
+paper/*.fls
 
 # Virtual environments
 .venv/
