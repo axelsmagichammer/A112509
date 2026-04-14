@@ -9,7 +9,7 @@ This repository contains algorithms, analysis tools, and pre-computed data for e
 Given an n-bit binary string, every contiguous substring can be read as a binary number (with leading zeros collapsing to 0). For example, the 4-bit string `1101` contains substrings:
 
 | Length | Substrings | Integer values |
-|--------|-----------|----------------|
+| -------- | ----------- | ---------------- |
 | 1 | `1`, `1`, `0`, `1` | 1, 0 |
 | 2 | `11`, `10`, `01` | 3, 2, 1 |
 | 3 | `110`, `101` | 6, 5 |
@@ -21,7 +21,7 @@ A112509 asks: for each n, what is the **maximum** count of distinct integers ach
 
 ## First 20 Values
 
-```
+```text
 n:    1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20
 a(n): 1   3   5   7  10  13  17  22  27  33  40  47  55  64  73  83  94 106 118 131
 ```
@@ -29,7 +29,7 @@ a(n): 1   3   5   7  10  13  17  22  27  33  40  47  55  64  73  83  94 106 118 
 ## Related OEIS Sequences
 
 | Sequence | Description | Range in this repo |
-|----------|-------------|--------------------|
+| ---------- | ------------- | -------------------- |
 | **A112509** | Max distinct integers (including 0) from n-bit substrings | n = 1–200 |
 | **A112510** | Smallest n-bit number achieving A112509(n) | n = 1–150 |
 | **A112511** | Largest n-bit number achieving A112509(n) | n = 1–150 |
@@ -80,7 +80,7 @@ Together these give 1/4 + O(1/n) ≤ a(n)/n² ≤ 1/2 + O(1/n). The lower bound 
 The following certified lower bounds, computed using the surgical nudge algorithm on optimised seeds, give very strong numerical support for the conjecture:
 
 | n | Lower bound on a(n) | a(n)/n² ≥ |
-|---|---|---|
+| --- | --- | --- |
 | 3,000 | 4,261,266 | 0.4735 |
 | 10,000 | 48,490,001 | 0.4849 |
 | 1,000,000 | 498,396,662,200 | 0.4984 |
@@ -91,7 +91,7 @@ The computation at n = 2 × 10⁹ required scoring a two-billion-bit string (app
 
 For exact values up to n = 150, the ratios are:
 
-```
+```text
 n=100: a(100)=3936,  a(n)/n²=0.3936
 n=120: a(120)=5688,  a(n)/n²=0.3950
 n=150: a(150)=9070,  a(n)/n²=0.4031
@@ -117,7 +117,7 @@ pip install -r requirements.txt
 
 ### Requirements
 
-```
+```text
 numpy>=1.24.0
 matplotlib>=3.7.0
 scipy>=1.10.0
@@ -129,13 +129,14 @@ numba>=0.58.0
 ```
 
 **Optional** (for n ≥ 1 billion scoring):
+
 ```bash
 pip install pydivsufsort
 ```
 
 ## Repository Structure
 
-```
+```text
 A112509/
 ├── README.md                 ← you are here
 ├── requirements.txt          ← Python dependencies
@@ -221,7 +222,7 @@ The pipeline was not designed upfront, it evolved iteratively as each approach h
 
 5. **Greedy and large-n seeding**: pushing to n in the thousands required a way to construct a good starting string without search. A greedy template approach was built using the observed linear scaling of block sizes. Counter-pattern seeds (inspired by de Bruijn sequence structure) were developed for n in the millions and above.
 
-6. **Surgical nudge**: at n ≥ 10⁶ even a single score evaluation dominates wall time, so random restarts become unaffordable. The surgical nudge replaced global random search with targeted local improvement: find the highest-LCP collision in the suffix array (the pair of substrings that waste the most coverage by being identical after leading-zero stripping), then make the smallest bit-swap capable of breaking it. This approach, parallelised across worker processes sharing a memory-mapped bit array, was the only method capable of making progress at n = 10⁸ and above. 
+6. **Surgical nudge**: at n ≥ 10⁶ even a single score evaluation dominates wall time, so random restarts become unaffordable. The surgical nudge replaced global random search with targeted local improvement: find the highest-LCP collision in the suffix array (the pair of substrings that waste the most coverage by being identical after leading-zero stripping), then make the smallest bit-swap capable of breaking it. This approach, parallelised across worker processes sharing a memory-mapped bit array, was the only method capable of making progress at n = 10⁸ and above.
 
 Thousands of hours of CPU time were consumed running the algorithms across extended overnight and multi-day runs.
 
@@ -249,13 +250,13 @@ The **LCP array** LCP has LCP[i] = length of the longest common prefix between t
 
 The key observation is that two substrings represent the same non-negative integer if and only if they are identical after stripping leading zeros. It follows that:
 
-```
+```text
 distinct values = (1 if any 0-bit present) + (# distinct substrings starting with '1')
 ```
 
 The second term counts distinct leading-1 substrings. Since every leading-1 substring is a prefix of some leading-1 suffix, and the suffix array lists all suffixes in sorted order, the number of distinct leading-1 substrings can be read off from the LCP array: each leading-1 suffix at SA position i contributes `(n − SA[i])` substrings, of which `LCP[i]` are already counted by the preceding suffix (they share a common prefix of that length). Summing only over positions where the suffix starts with `1`:
 
-```
+```text
 f(s) = Σ_{i: s[SA[i]] = '1'}  (n − SA[i] − LCP[i])  +  𝟙[0 ∈ s]
 ```
 
@@ -511,7 +512,7 @@ Expects a seed file in `seeds/` (e.g. `n_100000000_seed.npy`). Results are saved
 ## Tools
 
 | Script | Purpose |
-|--------|---------|
+| -------- | --------- |
 | `generate_oeis_bfiles.py` | Export all sequences to OEIS b-file format in `data/oeis/` |
 | `enhance_cached_results.py` | Add A112510/A112511/A156022–A156024 to `cached_results.json` |
 | `debruijn_analysis.py` | Compute minimum de Bruijn embedding order for each optimal string |
@@ -665,7 +666,7 @@ The predominance of Δ²a(n) ∈ {0, 1} reflects the fact that Δa(n) increases 
 ### Table 1: a(n), Δa(n), Δ²a(n) for n = 1 to 50
 
 | n | a(n) | Δa | Δ²a |
-|--:|-----:|---:|----:|
+| --: | -----: | ---: | ----: |
 | 1 | 1 | – | – |
 | 2 | 3 | 2 | – |
 | 3 | 5 | 2 | 0 |
@@ -724,7 +725,7 @@ Note: Δ²a(n) ∈ {0, 1} throughout this range.
 Bold entries mark occurrences of Δ²a(n) = 2. Values for n ≤ 150 are exact from exhaustive search; n = 151–200 are exact values from independent MH runs (certified by multi-restart agreement).
 
 | n | a(n) | Δ²a | n | a(n) | Δ²a | n | a(n) | Δ²a | n | a(n) | Δ²a |
-|--:|-----:|----:|--:|-----:|----:|--:|-----:|----:|--:|-----:|----:|
+| --: | -----: | ----: | --: | -----: | ----: | --: | -----: | ----: | --: | -----: | ----: |
 | 51 | 937 | 1 | 89 | 3,034 | 0 | 127 | 6,402 | 1 | 165 | 11,070 | 1 |
 | 52 | 977 | **2** | 90 | 3,106 | 1 | 128 | 6,508 | 1 | 166 | 11,211 | 1 |
 | 53 | 1,017 | 0 | 91 | 3,179 | 1 | 129 | 6,615 | 1 | 167 | 11,353 | 1 |
