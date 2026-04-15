@@ -260,8 +260,21 @@ Fix $n\ge64$ and set
 \begin{equation}\label{eq:params}
   k=\floor{\tfrac{\sqrt{n}}{4}},\qquad M=n-(k-1).
 \end{equation}
-Since $n\ge64$ we have $k\ge2$ and $M\ge n/2\ge k(k+1)/2$ for all
-$n\ge64$.  Choose $b_1>b_2>\cdots>b_k\ge1$ with $\sum b_i=M$ and
+Since $n\ge64$ we have $k=\lfloor\sqrt{n}/4\rfloor\ge\lfloor8/4\rfloor=2$.
+
+\textit{Why $M\ge n/2$.}
+$M=n-(k-1)\ge n-k$. Since $k\le\sqrt{n}/4$ we have $k\le n/(4\sqrt{n})=\sqrt{n}/4\le n/2$ for $n\ge1$, so $M\ge n-n/2=n/2$.
+More explicitly: $k\le\sqrt{n}/4$ implies $k-1<\sqrt{n}/4\le n/2$ for $n\ge1$, hence $M=n-(k-1)>n/2$.
+
+\textit{Why $n/2\ge k(k+1)/2$.}
+This is equivalent to $n\ge k(k+1)$.  Since $k\le\sqrt{n}/4$ we have
+\[
+  k(k+1)\le k\cdot2k=2k^2\le2\cdot\frac{n}{16}=\frac{n}{8}\le n,
+\]
+where the second inequality uses $k\le\sqrt{n}/4$ so $k^2\le n/16$.
+Hence $M\ge n/2\ge k(k+1)/2$, and Lemma~\ref{lem:partition} applies.
+
+Choose $b_1>b_2>\cdots>b_k\ge1$ with $\sum b_i=M$ and
 $|b_i-M/k|\le k$, as in Lemma~\ref{lem:partition}.  Define
 \begin{equation}\label{eq:string}
   s\;=\;\underbrace{1^{b_1}}_{\text{block }1}\,0\,
