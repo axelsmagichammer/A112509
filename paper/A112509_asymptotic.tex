@@ -1,15 +1,17 @@
-\documentclass[12pt,a4paper]{article}
+﻿\documentclass[11pt,a4paper]{article}
 
 % -----------------------------------------------------------------------
 % Packages
 % -----------------------------------------------------------------------
-\usepackage{amsmath,amsthm,amssymb}
-\usepackage{hyperref}
+\usepackage{amsmath,amsthm,amssymb,mathtools}
 \usepackage{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage{microtype}
-\usepackage{enumitem}
-\usepackage{url}
 \usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{url}
 
 \geometry{margin=1in}
 
@@ -18,6 +20,7 @@
 % -----------------------------------------------------------------------
 \theoremstyle{plain}
 \newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{corollary}[theorem]{Corollary}
 
@@ -32,358 +35,454 @@
 % Macros
 % -----------------------------------------------------------------------
 \newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
-\newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
+\newcommand{\val}{\nu}
+\newcommand{\ones}{N_1}
+\newcommand{\zeros}{N_0}
 
-% -----------------------------------------------------------------------
-% Title
-% -----------------------------------------------------------------------
-\title{A Proof that $a(n)/n^2 \to \tfrac{1}{2}$\\
-       for OEIS Sequence A112509}
-
+\title{Asymptotic and structural results for OEIS sequence A112509}
 \author{Ben Clare}
-
 \date{April 2026}
 
-% =======================================================================
 \begin{document}
-% =======================================================================
-
 \maketitle
 
-% -----------------------------------------------------------------------
 \begin{abstract}
-% -----------------------------------------------------------------------
-For $n \ge 1$, let $a(n)$ denote the maximum number of distinct
-non-negative integers whose binary representations appear as contiguous
-substrings of some $n$-bit binary string (OEIS sequence A112509).
-This note proves that
+For a binary string $s$ of length $n$, let $f(s)$ be the number of
+distinct non-negative integers represented by contiguous substrings of
+$s$, read in binary with leading zeros suppressed.  Define
+$a(n)=\max_{|s|=n}f(s)$ (OEIS A112509~\cite{oeis}).  The present paper
+provides the first asymptotic results for this sequence.
+
+We prove that for all $n\ge 64$,
 \[
-  \lim_{n \to \infty} \frac{a(n)}{n^2} = \frac{1}{2}.
+  a(n) \;\ge\; \tfrac{1}{2}n^2 - 15\,n^{3/2},
 \]
-The upper bound $a(n) \le n(n+1)/2$ is elementary.  For the matching
-lower bound an explicit family of $n$-bit strings is exhibited achieving
-at least $\frac{1}{2}n^2 - O(n^{5/3})$ distinct integer values.  The
-argument is self-contained and elementary.
+and hence $\lim_{n\to\infty}a(n)/n^2=\tfrac{1}{2}$, matching the
+elementary upper bound $a(n)\le n(n+1)/2$.  The proof is completely
+explicit.  Beyond the limit, we prove:\ (i)~near-optimal strings can
+be chosen with ones-density $1-O(n^{-1/2})$;\ (ii)~every optimal
+string has ones-density $1-O(n^{-1/4})$;\ (iii)~the number of zeros
+$z$ in any string $s$ reduces the maximum possible $f(s)$ by at least
+$z(z+1)/2$;\ (iv)~fragmenting the zeros into $m$ runs imposes an
+additional penalty of at least $\binom{m}{2}$.  Computational data for
+$n\le150$ and certified lower bounds through $n=2\times10^9$ are
+discussed~\cite{github}.
 \end{abstract}
 
-% =======================================================================
 \section{Introduction}
-% =======================================================================
 
-Given a binary string $s$ of length $n$, every contiguous substring can
-be read as a non-negative integer in binary (with leading zeros ignored
-in the standard way: $\texttt{01} = \texttt{1} = 1$, $\texttt{00} =
-\texttt{0} = 0$).
+\subsection{The sequence}
 
-\begin{definition}
-  For a binary string $s \in \{0,1\}^n$, let $f(s)$ denote the number
-  of distinct non-negative integers whose binary representations appear
-  among the contiguous substrings of $s$.  Define
-  \[
-    a(n) = \max_{s \in \{0,1\}^n} f(s).
-  \]
-\end{definition}
-
-The sequence $a(n)$ is listed as OEIS A112509~\cite{oeis}.  It begins
+For $s\in\{0,1\}^n$, let $f(s)$ denote the number of distinct
+non-negative integers whose binary representations appear as contiguous
+substrings of $s$ (leading zeros suppressed: $\mathtt{01}=1$,
+$\mathtt{00}=0$).  Set $a(n)=\max_{|s|=n}f(s)$.  This is OEIS
+A112509~\cite{oeis}, beginning
 \[
-  1, 3, 5, 7, 10, 13, 17, 22, 27, 33, 40, 47, 55, 64, 73, 83, 94, 106,
-  118, 131, \ldots
+  1,3,5,7,10,13,17,22,27,33,40,47,55,64,73,83,94,106,118,131,\ldots
 \]
-Prior computational work~\cite{github} established exact values for
-$n \le 150$ and certified lower bounds up to $n = 2 \times 10^9$ via
-suffix-array-based search.  Selected values:
 
-\begin{center}
+\subsection{Numerical evidence}
+
+Exact values for $n\le150$ were computed in~\cite{github} by
+exhaustive structured search, and certified lower bounds obtained for
+much larger $n$ via suffix-array-guided local search.
+Table~\ref{tab:evidence} records selected values.
+
+\begin{table}[ht]
+\centering
 \begin{tabular}{rrl}
-  \toprule
-  $n$ & $a(n)$ or lower bound & $a(n)/n^2 \ge$ \\
-  \midrule
-  50            & $899$                               & $0.3596$ \\
-  100           & $3{,}875$                           & $0.3875$ \\
-  150           & $9{,}070$                           & $0.4031$ \\
-  $10^6$        & $498{,}396{,}662{,}200$             & $0.4984$ \\
-  $10^9$        & $499{,}943{,}911{,}277{,}037{,}650$ & $0.49994$ \\
-  $2\times10^9$ & $1{,}999{,}841{,}302{,}297{,}432{,}600$ & $0.49996$ \\
-  \bottomrule
+\toprule
+$n$ & $a(n)$ or lower bound & $a(n)/n^2\ge$ \\
+\midrule
+$50$            & $899$                                    & $0.3596$ \\
+$100$           & $3{,}875$                                & $0.3875$ \\
+$150$           & $9{,}070$                                & $0.4031$ \\
+$10^6$          & $498{,}396{,}662{,}200$                  & $0.4984$ \\
+$10^9$          & $499{,}943{,}911{,}277{,}037{,}650$      & $0.49994$ \\
+$2\times10^9$   & $1{,}999{,}841{,}302{,}297{,}432{,}600$ & $0.49996$ \\
+\bottomrule
 \end{tabular}
-\end{center}
+\caption{Selected values and lower bounds for $a(n)$.}
+\label{tab:evidence}
+\end{table}
 
-\noindent
-The purpose of this note is to prove the limit rigorously.
+\subsection{Main results}
 
-\begin{theorem}\label{thm:main}
-  $\displaystyle\lim_{n \to \infty} \dfrac{a(n)}{n^2} = \dfrac{1}{2}$.
+\begin{theorem}[Limit]\label{thm:limit}
+$\displaystyle\lim_{n\to\infty}\dfrac{a(n)}{n^2}=\dfrac{1}{2}$.
 \end{theorem}
 
-The proof combines an elementary upper bound (Section~\ref{sec:upper})
-with an explicit lower-bound construction (Sections~\ref{sec:construction}
---\ref{sec:asymptotic}).
+\begin{theorem}[Quantitative lower bound]\label{thm:quant}
+For every $n\ge64$,
+\[
+  a(n)\;\ge\;\frac{1}{2}n^2-15\,n^{3/2}.
+\]
+\end{theorem}
 
-% =======================================================================
+\begin{proposition}[Density of ones]\label{prop:density}
+\leavevmode
+\begin{enumerate}[label=\normalfont(\roman*)]
+\item There exists an explicit family of strings $s_n$ with
+  $f(s_n)\ge\tfrac{1}{2}n^2-15n^{3/2}$ and $\zeros(s_n)=O(\sqrt{n})$,
+  so the ones-density satisfies $\ones(s_n)/n=1-O(n^{-1/2})$.
+\item Every optimal string $s_n^*$ satisfies $\zeros(s_n^*)=O(n^{3/4})$,
+  equivalently $\ones(s_n^*)/n=1-O(n^{-1/4})$.
+\end{enumerate}
+\end{proposition}
+
+Section~\ref{sec:upper} gives the upper bound.
+Sections~\ref{sec:construction}--\ref{sec:lower} prove
+Theorems~\ref{thm:limit}--\ref{thm:quant}.
+Section~\ref{sec:density} proves Proposition~\ref{prop:density}.
+Sections~\ref{sec:zeros}--\ref{sec:runs} develop the structural bounds.
+
+\section{Definitions}
+
+If $w=w_1\cdots w_k\in\{0,1\}^k$, its binary value is
+$\val(w)=\sum_{i=1}^k w_i\,2^{k-i}$.
+The value set of $s\in\{0,1\}^n$ is
+$V(s)=\{\val(s_i\cdots s_j):1\le i\le j\le n\}$,
+and $f(s)=|V(s)|$.
+Write $\ones(s)$ and $\zeros(s)$ for the number of ones and zeros in $s$.
+
 \section{Upper bound}\label{sec:upper}
-% =======================================================================
 
 \begin{lemma}[Upper bound]\label{lem:upper}
-  For all $n \ge 1$, $a(n) \le \dfrac{n(n+1)}{2}$.
+For every $n\ge1$, $a(n)\le n(n+1)/2$, and hence
+$\limsup_{n\to\infty}a(n)/n^2\le1/2$.
 \end{lemma}
 
 \begin{proof}
-  Two substrings of $s$ represent the same integer if and only if they
-  are identical after stripping leading zeros.  Consequently every
-  distinct positive integer value corresponds to a unique substring
-  beginning with \texttt{1}.
+Every distinct positive integer in $V(s)$ has a unique standard binary
+representation beginning with~$\mathtt{1}$, so it is represented by at
+least one substring of $s$ beginning with~$\mathtt{1}$.  Different
+positive integers require different such substrings.
 
-  \emph{Case 1.}  Suppose $s$ contains at least one \texttt{0} bit.
-  Then the value $0$ is also represented, but only by substrings beginning
-  with \texttt{0}.  At least one of the $\frac{n(n+1)}{2}$ substrings
-  begins with~\texttt{0}, so the count of leading-\texttt{1} substrings
-  is at most $\frac{n(n+1)}{2} - 1$.  Adding the single value $0$ gives
-  $f(s) \le \frac{n(n+1)}{2}$.
-
-  \emph{Case 2.}  If $s$ is the all-ones string then $f(s)$ equals the
-  number of distinct positive values, which is at most $\frac{n(n+1)}{2}$.
-
-  Hence $a(n) \le \frac{n(n+1)}{2}$ and $\limsup_{n\to\infty}
-  a(n)/n^2 \le \frac{1}{2}$.
+If $s$ contains at least one zero then $0\in V(s)$, represented only by
+substrings beginning with~$\mathtt{0}$.  At least one of the $n(n+1)/2$
+substrings begins with~$\mathtt{0}$, so the number of leading-$\mathtt{1}$
+substrings is at most $n(n+1)/2-1$, giving $f(s)\le n(n+1)/2$.  If $s$
+is all ones then $f(s)$ counts distinct positive values, at most $n(n+1)/2$.
 \end{proof}
 
 \begin{remark}
-  The bound $a(n) \le n(n+1)/2$ is tight at $n = 2$: the string
-  \texttt{11} has substrings \texttt{1}, \texttt{1}, \texttt{11} with
-  values $1, 1, 3$, giving $f(\texttt{11}) = 2 = 2 \cdot 3/2 - 1$.
-  Wait --- $\texttt{10}$ gives substrings with values $\{0, 1, 2\}$, so
-  $a(2) = 3 = 2 \cdot 3/2$.  The bound is achieved.
+The bound is tight at $n=2$: $\mathtt{10}$ gives $V(\mathtt{10})=\{0,1,2\}$,
+so $a(2)=3=2\cdot3/2$.
 \end{remark}
 
-% =======================================================================
 \section{The construction}\label{sec:construction}
-% =======================================================================
 
-Fix $n \ge 8$.  Set
-\[
-  m = \floor{n^{1/3}}, \qquad
-  C = \frac{m(m-1)}{2}, \qquad
-  L = \floor{\frac{n - C}{m}}, \qquad
-  r = n - C - mL.
-\]
-Since $L = \floor{(n-C)/m}$ we have $0 \le r < m$ and
-$n = mL + C + r$.  Note that $m \ge 2$ for $n \ge 8$, and
-$L \ge (n-C)/m - 1 \ge n/(2m) \to \infty$, so $L \ge 1$ for all
-sufficiently large $n$ (in fact for all $n \ge 8$).
+\subsection{Strictly decreasing partitions}
 
-Define the $n$-bit binary string
-\begin{equation}\label{eq:sn}
-  s_n \;=\;
-  \underbrace{1^L}_{}\,
-  0^1\,
-  \underbrace{1^L}_{}\,
-  0^2\,
-  \underbrace{1^L}_{}\,
-  0^3\,
-  \cdots\,
-  \underbrace{1^L}_{}\,
-  0^{m-1}\,
-  \underbrace{1^{L+r}}_{}
-\end{equation}
-consisting of $m$ one-blocks.  The first $m-1$ one-blocks each have
-length $L$; the final one-block has length $L + r$.  The zero-separator
-lengths are $1, 2, 3, \ldots, m-1$ in order.
-
-\begin{lemma}[Length check]
-  The string $s_n$ has length $n$.
+\begin{lemma}[Decreasing partition]\label{lem:partition}
+Let $k\ge2$ and $M\ge k(k+1)/2$.  Then there exist strictly decreasing
+positive integers $b_1>b_2>\cdots>b_k\ge1$ with $\sum_{i=1}^k b_i=M$.
+Moreover, they may be chosen with $|b_i-M/k|\le k$ for all $i$.
 \end{lemma}
 
 \begin{proof}
-  The total length is $(m-1)L + (L+r) + (1 + 2 + \cdots + (m-1))
-  = mL + r + C = n$.
+Set $q=\lfloor M/k-(k-1)/2\rfloor$ and
+$r=M-(kq+k(k-1)/2)$, so $0\le r<k$.  Define
+\[
+  b_i=\begin{cases}q+k-i+1,&1\le i\le r,\\q+k-i,&r<i\le k.\end{cases}
+\]
+Then $b_1>b_2>\cdots>b_k$, $\sum b_i=M$, and $M\ge k(k+1)/2$ gives
+$q\ge1$, so $b_k\ge1$.  Every $b_i$ lies in the interval $(q,q+k]$,
+which contains $M/k$ and has width $k$.
 \end{proof}
 
-% =======================================================================
-\section{A large injective family of substrings}\label{sec:family}
-% =======================================================================
+\subsection{Parameters and string}
 
-For integers $i, j, \alpha, \beta$ satisfying
-\[
-  1 \le i < j \le m, \qquad 1 \le \alpha \le L, \qquad 1 \le \beta \le L,
-\]
-define the substring $u_{i,j,\alpha,\beta}$ of $s_n$ obtained by starting
-inside the $i$-th one-block at the position where exactly $\alpha$ ones
-remain in that block, and ending inside the $j$-th one-block immediately
-after its first $\beta$ ones.
+Fix $n\ge64$ and set
+\begin{equation}\label{eq:params}
+  k=\floor{\tfrac{\sqrt{n}}{4}},\qquad M=n-(k-1).
+\end{equation}
+Since $n\ge64$ we have $k\ge2$ and $M\ge n/2\ge k(k+1)/2$ for all
+$n\ge64$.  Choose $b_1>b_2>\cdots>b_k\ge1$ with $\sum b_i=M$ and
+$|b_i-M/k|\le k$, as in Lemma~\ref{lem:partition}.  Define
+\begin{equation}\label{eq:string}
+  s\;=\;\underbrace{1^{b_1}}_{\text{block }1}\,0\,
+         \underbrace{1^{b_2}}_{\text{block }2}\,0\,
+         \cdots\,0\,
+         \underbrace{1^{b_k}}_{\text{block }k},
+\end{equation}
+consisting of $k$ one-blocks separated by $k-1$ single zeros.  Its
+length is $\sum b_i+(k-1)=M+(k-1)=n$.
 
-Because each intermediate one-block (blocks $i+1$ through $j-1$) has
-length exactly $L$ and $\beta \le L \le L+r$ (so the endpoint lies inside
-the $j$-th block regardless of whether $j = m$), the substring is
-well-defined.  Explicitly, its binary form is
+\section{An injective family of substrings}\label{sec:family}
+
+For integers $i,j,\alpha,\beta$ satisfying
+\begin{equation}\label{eq:range}
+  1\le i,\quad j\ge i+2,\quad j\le k,\quad
+  1\le\alpha\le b_i,\quad 1\le\beta\le b_j,
+\end{equation}
+define $u_{i,j,\alpha,\beta}$ to be the substring of $s$ beginning
+$\alpha$ positions before the end of block~$i$ and ending after the
+first $\beta$ ones of block~$j$.  In binary,
 \begin{equation}\label{eq:u}
   u_{i,j,\alpha,\beta}
-  \;=\;
-  \underbrace{1^{\alpha}}_{\text{tail of block }i}\,
-  \underbrace{0^{i}}_{\text{sep.}}\,
-  \underbrace{1^{L}\,0^{i+1}}_{\text{block }i+1}\,
-  \underbrace{1^{L}\,0^{i+2}}_{\text{block }i+2}\,
-  \cdots\,
-  \underbrace{1^{L}\,0^{j-1}}_{\text{block }j-1}\,
-  \underbrace{1^{\beta}}_{\text{head of block }j}.
+  =1^{\alpha}\,0\,1^{b_{i+1}}\,0\,1^{b_{i+2}}\,0\,
+  \cdots\,1^{b_{j-1}}\,0\,1^{\beta}.
 \end{equation}
-Every such word begins and ends with \texttt{1}, so it is already the
-standard binary expansion of a positive integer.
+The condition $j\ge i+2$ ensures at least one full interior block
+($b_{i+1},\ldots,b_{j-1}$).  Every $u_{i,j,\alpha,\beta}$ starts and
+ends with~$\mathtt{1}$, so it is already a standard binary expansion of
+a positive integer.
 
 \begin{lemma}[Injectivity]\label{lem:inject}
-  The map $(i, j, \alpha, \beta) \mapsto u_{i,j,\alpha,\beta}$ is
-  injective: distinct quadruples yield distinct binary strings.
+The map $(i,j,\alpha,\beta)\mapsto u_{i,j,\alpha,\beta}$ is injective
+on the range~\eqref{eq:range}.
 \end{lemma}
 
 \begin{proof}
-  Let $(i, j, \alpha, \beta)$ and $(i', j', \alpha', \beta')$ be two
-  quadruples with $u_{i,j,\alpha,\beta} = u_{i',j',\alpha',\beta'}$ as
-  binary strings.  Since both strings begin and end with \texttt{1}, their
-  run-length encodings are uniquely determined.  From~\eqref{eq:u}, the
-  run-length encoding of $u_{i,j,\alpha,\beta}$, listing alternating
-  one-block and zero-block lengths, is
-  \[
-    (\alpha,\; i,\; L,\; i+1,\; L,\; i+2,\; \ldots,\; L,\; j-1,\; \beta).
-  \]
-  Equality of run-length encodings gives:
-  \begin{itemize}
-    \item First entry: $\alpha = \alpha'$.
-    \item Last entry: $\beta = \beta'$.
-    \item First zero-block length (second entry): $i = i'$.
-    \item Last zero-block length: $j - 1 = j' - 1$, so $j = j'$.
-  \end{itemize}
-  Hence $(i, j, \alpha, \beta) = (i', j', \alpha', \beta')$, proving
-  injectivity.
+Suppose $u_{i,j,\alpha,\beta}=u_{i',j',\alpha',\beta'}$ as binary words.
+The run-length encoding (RLE) of~\eqref{eq:u}, listing alternating
+run-lengths of ones then zeros, is
+\[
+  (\alpha,\,1,\,b_{i+1},\,1,\,b_{i+2},\,1,\,\ldots,\,b_{j-1},\,1,\,\beta).
+\]
+Matching entries gives $\alpha=\alpha'$, $\beta=\beta'$, and
+$(b_{i+1},\ldots,b_{j-1})=(b_{i'+1},\ldots,b_{j'-1})$.  Since
+$b_1>\cdots>b_k$ is strictly decreasing, every consecutive subsequence
+occurs in exactly one position, so $i=i'$ and $j=j'$.
 \end{proof}
 
-% =======================================================================
-\section{Lower bound and asymptotics}\label{sec:asymptotic}
-% =======================================================================
+\section{Quantitative lower bound and the limit}\label{sec:lower}
 
-\begin{lemma}[Counting]\label{lem:count}
-  $a(n) \ge \dbinom{m}{2} L^2$.
+\begin{proof}[Proof of Theorem~\ref{thm:quant}]
+By Lemma~\ref{lem:inject}, the family $\{u_{i,j,\alpha,\beta}\}$
+consists of pairwise distinct positive integers, so
+\begin{equation}\label{eq:f-lower}
+  a(n)\ge f(s)\ge\sum_{\substack{1\le i<j\le k\\j\ge i+2}}b_i b_j.
+\end{equation}
+Expanding:
+\begin{equation}\label{eq:expand}
+  \sum_{j\ge i+2}b_i b_j
+  =\frac{(\sum b_i)^2-\sum b_i^2}{2}-\sum_{i=1}^{k-1}b_i b_{i+1}.
+\end{equation}
+
+\textbf{Step~1.}  Since $\sum b_i=M=n-k+1$ and $k\le\sqrt{n}/4$,
+\[
+  \frac{M^2}{2}\ge\frac{(n-\sqrt{n}/4)^2}{2}
+  \ge\frac{n^2}{2}-\frac{n^{3/2}}{4}.
+\]
+
+\textbf{Step~2.}  Write $b_i=M/k+d_i$ with $|d_i|\le k$.  Then
+$\sum b_i^2\le M^2/k+k^3$.
+Since $k\ge\sqrt{n}/8$ (as $\lfloor x\rfloor\ge x/2$ for $x\ge2$),
+$M^2/k\le n^2/(\sqrt{n}/8)=8n^{3/2}$,
+and $k^3\le(\sqrt{n}/4)^3=n^{3/2}/64$, so
+\begin{equation}\label{eq:sumsq}
+  \sum_{i=1}^k b_i^2<9n^{3/2}.
+\end{equation}
+
+\textbf{Step~3.}  By AM--GM,
+$b_i b_{i+1}\le(b_i^2+b_{i+1}^2)/2$, so
+\begin{equation}\label{eq:adj}
+  \sum_{i=1}^{k-1}b_i b_{i+1}\le\sum_{i=1}^k b_i^2<9n^{3/2}.
+\end{equation}
+
+\textbf{Conclusion.}  Substituting into~\eqref{eq:expand}:
+\[
+  a(n)\ge\frac{n^2}{2}-\frac{n^{3/2}}{4}
+  -\frac{9n^{3/2}}{2}-9n^{3/2}
+  =\frac{n^2}{2}-\frac{55}{4}n^{3/2}>\frac{n^2}{2}-15n^{3/2}.\qedhere
+\]
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:limit}]
+Lemma~\ref{lem:upper} gives $\limsup a(n)/n^2\le1/2$.
+Theorem~\ref{thm:quant} gives $a(n)/n^2\ge1/2-15/\sqrt{n}\to1/2$.
+\end{proof}
+
+\begin{corollary}\label{cor:rate}
+For all $n\ge64$, $\;n^2/2-15n^{3/2}\le a(n)\le n(n+1)/2$, so
+$a(n)/n^2=1/2+O(n^{-1/2})$.
+\end{corollary}
+
+\section{Density of ones}\label{sec:density}
+
+\subsection{Near-optimal strings}
+
+\begin{proof}[Proof of Proposition~\ref{prop:density}(i)]
+The string $s=s_n$ from~\eqref{eq:string} has $f(s_n)\ge n^2/2-15n^{3/2}$
+by Theorem~\ref{thm:quant}, and contains exactly $k-1\le\sqrt{n}/4$
+zeros, so $\zeros(s_n)=O(\sqrt{n})$ and $\ones(s_n)/n=1-O(n^{-1/2})$.
+\end{proof}
+
+\subsection{Zero-position penalty}
+
+\begin{lemma}[Zero-position bound]\label{lem:zero-pos}
+Let $s\in\{0,1\}^n$ have zeros at positions $p_1<\cdots<p_z$.  Then
+\[
+  f(s)\le\frac{n(n+1)}{2}-\sum_{r=1}^z(n-p_r+1).
+\]
+In particular, $\;f(s)\le n(n+1)/2-z(z+1)/2$.
 \end{lemma}
 
 \begin{proof}
-  There are $\binom{m}{2}$ choices for the pair $(i, j)$ and $L^2$
-  choices for $(\alpha, \beta)$.  By Lemma~\ref{lem:inject}, the
-  $\binom{m}{2} L^2$ corresponding substrings are pairwise distinct
-  binary strings, each beginning with~\texttt{1}, and hence represent
-  pairwise distinct positive integers.  They are all substrings of $s_n$,
-  so $f(s_n) \ge \binom{m}{2} L^2$ and thus $a(n) \ge \binom{m}{2} L^2$.
+For each $x\in V(s)$ choose a minimum-length representative $w_x$.
+The map $x\mapsto w_x$ is injective.  If $x>0$ then $w_x$ starts with
+$\mathtt{1}$ (otherwise removing leading zeros gives a shorter
+representative).  So distinct positive values correspond to distinct
+leading-$\mathtt{1}$ substrings.
+
+Substrings starting at zero-position $p_r$ number $n-p_r+1$ and none
+starts with~$\mathtt{1}$, giving the first inequality.  The second
+follows by placing zeros as far right as possible ($p_r=n-z+r$), which
+minimises $\sum(n-p_r+1)=z(z+1)/2$.
 \end{proof}
 
-Theorem~\ref{thm:main} now follows.
+\subsection{Optimal strings have few zeros}
 
-\begin{proof}[Proof of Theorem~\ref{thm:main}]
-  The upper bound $\limsup_{n\to\infty} a(n)/n^2 \le \frac{1}{2}$ is
-  Lemma~\ref{lem:upper}.  For the lower bound, use Lemma~\ref{lem:count}
-  together with $L \ge (n - C)/m - 1 = (n - C - m)/m$:
-  \[
-    a(n)
-    \;\ge\; \binom{m}{2} L^2
-    \;\ge\; \frac{m(m-1)}{2} \cdot \left(\frac{n - C - m}{m}\right)^{\!2}
-    \;=\; \frac{m-1}{2m}\,(n - C - m)^2.
-  \]
-  Dividing by $n^2$:
-  \begin{equation}\label{eq:ratio}
-    \frac{a(n)}{n^2}
-    \;\ge\; \frac{1}{2}\!\left(1 - \frac{1}{m}\right)\!
-            \left(1 - \frac{C + m}{n}\right)^{\!2}.
-  \end{equation}
-  Now $C + m = m(m-1)/2 + m = m(m+1)/2$.  Since $m = \floor{n^{1/3}}$,
-  we have $m \to \infty$ and
-  \[
-    \frac{C + m}{n} = \frac{m(m+1)/2}{n} = O\!\left(\frac{m^2}{n}\right)
-    = O\!\left(n^{-1/3}\right) \to 0.
-  \]
-  Therefore the right-hand side of~\eqref{eq:ratio} tends to
-  $\frac{1}{2} \cdot 1 \cdot 1 = \frac{1}{2}$, giving
-  $\liminf_{n\to\infty} a(n)/n^2 \ge \frac{1}{2}$.
-
-  Combining with the upper bound completes the proof.
+\begin{proof}[Proof of Proposition~\ref{prop:density}(ii)]
+Let $s_n^*$ be optimal with $z_n=\zeros(s_n^*)$.  By
+Theorem~\ref{thm:quant} and Lemma~\ref{lem:zero-pos},
+\[
+  \frac{n^2}{2}-15n^{3/2}
+  \le a(n)=f(s_n^*)
+  \le\frac{n(n+1)}{2}-\frac{z_n(z_n+1)}{2}.
+\]
+Hence $z_n(z_n+1)/2\le15n^{3/2}+n/2+1$, giving $z_n=O(n^{3/4})$ and
+$\ones(s_n^*)/n=1-O(n^{-1/4})$.
 \end{proof}
 
-% =======================================================================
-\section{Quantitative corollary}\label{sec:quant}
-% =======================================================================
+\section{Upper bounds via the zero structure}\label{sec:zeros}
 
-\begin{corollary}
-  For all $n \ge 8$,
-  \[
-    a(n) \;\ge\; \frac{n^2}{2} - O\!\left(n^{5/3}\right).
-  \]
+Lemma~\ref{lem:zero-pos} treats all zeros equally.  We now refine the
+bound using the \emph{run structure} of the zeros.
+
+Let the maximal zero-runs of $s$ have lengths $c_1,\ldots,c_m$, with
+the $i$-th run beginning at position $a_i$ and $r_i=n-(a_i+c_i)+1$
+positions to its right.
+
+\begin{lemma}[Run-sensitive bound]\label{lem:runs-raw}
+$f(s)\le n(n+1)/2-\sum_{i=1}^m\bigl(c_i r_i+\binom{c_i+1}{2}\bigr)$.
+\end{lemma}
+
+\begin{proof}
+Apply Lemma~\ref{lem:zero-pos} and group by zero-runs.
+The $i$-th run occupies positions $a_i,\ldots,a_i+c_i-1$, contributing
+$\sum_{t=0}^{c_i-1}(n-a_i-t+1)=c_i(n-a_i+1)-c_i(c_i-1)/2
+=c_i r_i+\binom{c_i+1}{2}$ to the sum.
+\end{proof}
+
+\section{Fragmentation penalty}\label{sec:runs}
+
+\begin{corollary}[Fragmentation]\label{cor:fragment}
+If $s$ has $z$ zeros in $m$ maximal zero-runs, then
+\[
+  f(s)\;\le\;\frac{n(n+1)}{2}-\frac{z(z+1)}{2}-\binom{m}{2}.
+\]
 \end{corollary}
 
 \begin{proof}
-  Starting from $a(n) \ge \frac{m-1}{2m}(n - C - m)^2$, expand
-  $(n - C - m)^2 = n^2 - 2n(C+m) + (C+m)^2$.  Since $C + m =
-  m(m+1)/2 = O(m^2) = O(n^{2/3})$ and $m = O(n^{1/3})$:
-  \begin{align*}
-    (n - C - m)^2 &= n^2 - 2n \cdot O(n^{2/3}) + O(n^{4/3})
-                   = n^2 - O(n^{5/3}),\\
-    \frac{m-1}{2m} &= \frac{1}{2} - \frac{1}{2m} = \frac{1}{2} - O(n^{-1/3}).
-  \end{align*}
-  Thus
-  \[
-    a(n) \;\ge\; \left(\tfrac{1}{2} - O(n^{-1/3})\right)\bigl(n^2 - O(n^{5/3})\bigr)
-         \;=\; \frac{n^2}{2} - O(n^{5/3}). \qedhere
-  \]
+It suffices to show
+$\sum_i\bigl(c_i r_i+\binom{c_i+1}{2}\bigr)\ge z(z+1)/2+\binom{m}{2}$.
+Since consecutive zero-runs are separated by at least one $\mathtt{1}$,
+for $i<m$ we have $r_i\ge\sum_{j>i}c_j+(m-i)$, so
+$\sum_i c_i r_i\ge\sum_{i<j}c_i c_j+\sum_{i=1}^{m-1}c_i(m-i)$.
+The identity $\binom{z+1}{2}=\sum_{i<j}c_i c_j+\sum_i(c_i^2+c_i)/2$ gives
+$\sum_{i<j}c_i c_j+\sum_i\binom{c_i+1}{2}=z(z+1)/2$.
+Finally $\sum_{i=1}^{m-1}c_i(m-i)\ge\sum_{i=1}^{m-1}(m-i)=\binom{m}{2}$
+(each $c_i\ge1$).
 \end{proof}
 
 \begin{remark}
-  The error term $O(n^{5/3})$ is an artefact of the simple construction.
-  Computational experiments using suffix-array-guided local search
-  yield strings achieving ratios within $0.004\%$ of $\frac{1}{2}$ at
-  $n = 2\times 10^9$, far closer to the upper bound, but those
-  refined constructions are not needed for the asymptotic theorem.
+Corollary~\ref{cor:fragment} shows that fragmenting the zeros into more
+runs always reduces the upper bound on $f(s)$, regardless of positions.
+Each additional run incurs an extra penalty of at least $m-1$ (the new
+run number), on top of the baseline $z(z+1)/2$.
 \end{remark}
 
-% =======================================================================
+\section{Computational evidence}\label{sec:comp}
+
+\paragraph{Exact values ($n\le150$).}
+Exact values of $a(n)$ were computed for all $n\le150$ in~\cite{github}
+using three independent methods: unconstrained Metropolis--Hastings
+search (at most 10~restarts, reaching the optimum for every $n\le150$),
+constrained Metropolis--Hastings with a fixed run-length template, and
+exact exhaustive template search.  On every overlap the methods agreed.
+
+\paragraph{Large-scale certified lower bounds.}
+A suffix-array-guided local search (\emph{surgical nudge}) was used for
+$n$ up to $2\times10^9$~\cite{github}.  In each iteration the algorithm
+finds the highest-LCP collision in the suffix array, searches a
+neighbourhood for a density-preserving swap that resolves it, and
+accepts only swaps that strictly increase the exact score.  Since the
+score is monotone non-decreasing, every recorded value is a rigorous
+lower bound.  At $n=2\times10^9$ a lower bound of $a(n)/n^2\ge0.49996$
+was obtained.
+
+\paragraph{Comparison with theory.}
+The ratio $a(n)/n^2$ rises from $0.3596$ at $n=50$ to $0.4031$ at
+$n=150$, and exceeds $0.49996$ at $n=2\times10^9$.  
+Theorem~\ref{thm:quant} gives $a(n)/n^2\ge1/2-15/\sqrt{n}$, which
+reaches $0.4875$ only at $n=14{,}400$.  The computational lower bounds
+substantially exceed the theoretical bound at moderate $n$, confirming
+that the constant $15$ in $15n^{3/2}$ is far from tight.
+
+\paragraph{Entropy of optimal solutions.}
+Let $S_n$ denote the set of all strings achieving $a(n)$ and
+$H(n)=\log_2|S_n|$.  For $n\le150$, $H(n)$ is almost always zero or
+very small: the typical optimum is unique or nearly so, with
+$H(n)\le10.4$ throughout.  Optimal strings share long common prefixes;
+the zero-separator structure is completely rigid in 28~cases and varies
+by at most one separator in a further 119~cases out of $n\le150$.
+
+\section{Heuristic remarks}\label{sec:heuristic}
+
+To maximise $f(s)$, one seeks to maximise the number of
+leading-$\mathtt{1}$ substrings that remain pairwise distinct after
+leading zeros are stripped.  Long repeated patterns create large
+common-prefix collisions, inflating LCP values and causing many pairs
+of substrings to agree.  The explicit construction in
+Section~\ref{sec:construction} avoids this by using \emph{strictly
+decreasing} one-block lengths: any two substrings $u_{i,j,\alpha,\beta}$
+and $u_{i',j',\alpha',\beta'}$ spanning different block-pairs $(i,j)
+\ne(i',j')$ have different interior block-length sequences, making them
+provably distinct (Lemma~\ref{lem:inject}).
+
+Empirically, all optimal strings for $n\le150$ follow a similar
+principle: they begin with a long run of ones, followed by
+decreasing-length one-blocks with a fixed separator prefix
+$1,2,1,1,\ldots$, and have ones-density growing toward $1$.  This
+structure is consistent with the proven density bounds, though the
+actual empirical zero count at small $n$ grows far more slowly than the
+theoretical $O(n^{3/4})$ bound would suggest.
+
 \section{A worked example}\label{sec:example}
-% =======================================================================
 
-\begin{example}[$n = 27$]
-  With $n = 27$ one computes $m = \floor{27^{1/3}} = 3$, $C = 3$,
-  $L = \floor{24/3} = 8$, $r = 0$.  The construction gives
-  \[
-    s_{27} = \underbrace{11111111}_{8}\,0\,
-             \underbrace{11111111}_{8}\,00\,
-             \underbrace{11111111}_{8},
-  \]
-  a 27-bit string of the form $\texttt{1}^8\texttt{0}^1\texttt{1}^8
-  \texttt{0}^2\texttt{1}^8$.
+\begin{example}[$n=169$, $k=3$]
+With $n=169$: $k=\lfloor13/4\rfloor=3$, $M=169-2=167$.  Choose
+\[
+  b_1=57,\quad b_2=56,\quad b_3=54;\qquad
+  57>56>54\ge1,\quad57+56+54=167\,.
+\]
+The construction gives the 169-bit string
+\[
+  s=\underbrace{1^{57}}_{\text{block }1}\;0\;
+    \underbrace{1^{56}}_{\text{block }2}\;0\;
+    \underbrace{1^{54}}_{\text{block }3},
+\]
+of length $57+1+56+1+54=169$.
 
-  The three pairs $(i,j)$ with $1 \le i < j \le 3$ are $(1,2)$, $(1,3)$,
-  and $(2,3)$.  For each pair there are $L^2 = 64$ choices of $(\alpha,
-  \beta)$, giving $3 \cdot 64 = 192$ distinct substrings:
-  \begin{itemize}
-    \item $(i,j) = (1,2)$: strings of the form
-      $\texttt{1}^{\alpha}\texttt{0}\texttt{1}^{\beta}$
-      (spanning the first separator).
-    \item $(i,j) = (1,3)$: strings of the form
-      $\texttt{1}^{\alpha}\texttt{0}\texttt{1}^{8}\texttt{00}\texttt{1}^{\beta}$
-      (spanning both separators).
-    \item $(i,j) = (2,3)$: strings of the form
-      $\texttt{1}^{\alpha}\texttt{00}\texttt{1}^{\beta}$
-      (spanning the second separator).
-  \end{itemize}
-  These three families are distinguished by their zero-block structure
-  (one zero, then eight ones then two zeros, then two zeros,
-  respectively), confirming injectivity directly.  Hence $a(27) \ge 192$.
-  The exact value is $a(27) = 246$ (easily verified by exhaustive
-  enumeration of all $2^{26}$ strings of length~$27$), so the bound is
-  not tight but the asymptotic argument is correct.
+The only valid pair with $j\ge i+2$ and $j\le k=3$ is $(i,j)=(1,3)$,
+with interior block $b_2=56$.  For each $(\alpha,\beta)$ with
+$1\le\alpha\le57$ and $1\le\beta\le54$, the substring
+$u_{1,3,\alpha,\beta}=1^{\alpha}\,0\,1^{56}\,0\,1^{\beta}$.
+By Lemma~\ref{lem:inject} these $57\times54=3{,}078$ substrings are
+pairwise distinct positive integers, so $a(169)\ge3{,}078$.
+
+Note: the explicit bound $n^2/2-15n^{3/2}<0$ at $n=169$, reflecting
+that the constant $15$ is conservative and the asymptotic result
+requires large $n$ to dominate.
 \end{example}
 
-% =======================================================================
 \section*{Acknowledgements}
-% =======================================================================
 
 The author thanks the contributors to OEIS sequence A112509.
-
-% =======================================================================
-% Bibliography
-% =======================================================================
 
 \begin{thebibliography}{9}
 
