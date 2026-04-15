@@ -377,6 +377,15 @@ For all $n\ge64$, $\;n^2/2-15n^{3/2}\le a(n)\le n(n+1)/2$, so
 $a(n)/n^2=1/2+O(n^{-1/2})$.
 \end{corollary}
 
+\begin{remark}
+The lower bound $n^2/2-15n^{3/2}$ is negative for $n<900$ (since
+$n^2/2>15n^{3/2}$ iff $\sqrt{n}>30$).  For such $n$ the inequality in
+Theorem~\ref{thm:quant} is trivially satisfied by the non-negativity of
+$a(n)$, and carries no information.  The bound is meaningful only for
+$n\ge900$; for small~$n$ the exact values from computational search
+(Table~\ref{tab:values}) give much sharper information.
+\end{remark}
+
 \section{Density of ones}\label{sec:density}
 
 \subsection{Near-optimal strings}
