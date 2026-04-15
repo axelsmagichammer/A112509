@@ -41,11 +41,16 @@ a(n): 1   3   5   7  10  13  17  22  27  33  40  47  55  64  73  83  94 106 118 
 ## Key Findings
 
 - **Asymptotic growth**: lim a(n)/n² = 1/2 (proved — see [Clare (2026)](paper/A112509_asymptotic.pdf))
+- **Quantitative lower bound**: a(n) ≥ n²/2 − 15n^{3/2} for all n ≥ 64 (proved, explicit constant)
+- **Ones-density (near-optimal)**: explicit near-optimal strings have ones-density 1 − O(n^{−1/2}) (proved)
+- **Ones-density (optimal)**: every optimal string has ones-density 1 − O(n^{−1/4}) (proved)
+- **Zero-count penalty**: any z zeros impose a penalty ≥ z(z+1)/2 on f(s) relative to the upper bound (proved)
+- **Fragmentation penalty**: if the z zeros form m separate runs, the additional penalty is ≥ C(m, 2) (proved)
 - **Optimal string structure**: all optimal strings start with a long block of 1s, followed by decreasing 1-blocks separated by short 0-blocks, and the zero-separator prefix always begins `[1, 2, 1, ...]` and grows with n (K_common ≈ 3 at n = 30, 8 at n = 81–103, 14 at n = 150)
 - **De Bruijn connection**: the minimum de Bruijn order k for an optimal string equals its leading 1-block length (proved for all n ≤ 150)
 - **Lower bounds at scale**: a(1,000,000,000) ≥ 499,943,911,277,037,650
 - **Second differences**: Δ²a(n) = Δa(n) − Δa(n−1) ∈ {0, 1, 2} for all n ≤ 200; the value 2 occurs at exactly n = 52, 71, 117, 157, 178, 191, 194
-- **Optimal string structure detail**: the leading 1-block length equals the minimum de Bruijn order; 1-block sizes scale approximately linearly with n (α₁ ≈ 0.19n, α₂ ≈ 0.17n, ...); overall 1-density is tends to 1.
+- **Optimal string structure detail**: the leading 1-block length equals the minimum de Bruijn order; 1-block sizes scale approximately linearly with n (α₁ ≈ 0.19n, α₂ ≈ 0.17n, ...); overall 1-density tends to 1.
 
 ## Elementary Bounds
 
@@ -75,7 +80,7 @@ Together these give 1/4 + O(1/n) ≤ a(n)/n² ≤ 1/2 + O(1/n). The elementary l
 
 > **Theorem** (Clare, 2026). lim a(n)/n² = 1/2.
 
-The proof constructs an explicit family of strings achieving a(n) ≥ n²/2 − O(n^{5/3}), matching the upper bound to leading order. See [A112509_asymptotic.pdf](paper/A112509_asymptotic.pdf) for the full proof.
+The proof constructs an explicit family of n-bit strings with strictly decreasing one-block lengths, achieving a(n) ≥ n²/2 − 15n^{3/2} for all n ≥ 64. The paper also proves that every optimal string has ones-density 1 − O(n^{−1/4}), and derives zero-count and zero-fragmentation penalties on f(s). See [A112509_asymptotic.pdf](paper/A112509_asymptotic.pdf) for the full proofs.
 
 ## Asymptotic Numerical Evidence
 
@@ -771,7 +776,7 @@ Bold entries mark occurrences of Δ²a(n) = 2. Values for n ≤ 150 are exact fr
 
 The following open problems are suggested by the computational findings.
 
-**(i) Asymptotic rate.** The limit lim a(n)/n² = 1/2 is proved (Clare, 2026). The open question is the exact sub-leading term: the construction gives a(n) ≥ n²/2 − O(n^{5/3}), but the true second-order coefficient is unknown.
+**(i) Asymptotic rate.** The limit lim a(n)/n² = 1/2 is proved (Clare, 2026). The quantitative bound is a(n) ≥ n²/2 − 15n^{3/2} for n ≥ 64, but the constant 15 is not tight and the true sub-leading coefficient is unknown. Closing the gap between the lower bound O(n^{3/2}) and the upper bound O(n) would be progress.
 
 **(ii) Separator structure.** Prove or disprove that the zero-separator sequence (1, 2, 1, 1, ...) is universal for all sufficiently large n. Can the full separator sequence be determined analytically? The second separator being 2 while all others are 1 is a highly non-trivial constraint whose origin is not understood.
 
@@ -779,7 +784,7 @@ The following open problems are suggested by the computational findings.
 
 **(iv) Exact values.** Extend the exhaustive search computation beyond n = 150. Each additional value requires a substantial increase in the search budget; reaching n = 200 exactly appears to require many CPU-hours with the current structured-search method.
 
-**(v) One-bit density.** The fraction of 1-bits in optimal strings grows rapidly with n: from approximately 0.60 at n = 10, through 0.83 at n = 80, to 0.85–0.86 at n = 150. At large n the convergence is striking: the best-known seeds have density 0.999950 at n = 10⁹ and 0.999964 at n = 2 × 10⁹. This strongly suggests that the 1-bit density of optimal strings tends to 1 as n → ∞. Proving this and determining the rate of convergence, which appears to be 1 − O(1/n) is an open problem.
+**(v) One-bit density.** It is now proved that every optimal string has ones-density 1 − O(n^{−1/4}) (Clare, 2026). The bound follows from combining the quantitative lower bound on a(n) with the zero-count penalty. The empirical rate at large n is far tighter: the best-known seeds have density 0.999950 at n = 10⁹ and 0.999964 at n = 2 × 10⁹, suggesting the true rate is 1 − O(n^{−1}) or faster. Proving this sharper rate remains open.
 
 **(vi) Alphabet generalisation.** What is the analogous sequence for ternary (base-3) or higher-base alphabets? Does the ratio a_q(n)/n² for base q approach (q−1)/2 or some other constant?
 
