@@ -263,8 +263,9 @@ Fix $n\ge64$ and set
 Since $n\ge64$ we have $k=\lfloor\sqrt{n}/4\rfloor\ge\lfloor8/4\rfloor=2$.
 
 \textit{Why $M\ge n/2$.}
-$M=n-(k-1)\ge n-k$. Since $k\le\sqrt{n}/4$ we have $k\le n/(4\sqrt{n})=\sqrt{n}/4\le n/2$ for $n\ge1$, so $M\ge n-n/2=n/2$.
-More explicitly: $k\le\sqrt{n}/4$ implies $k-1<\sqrt{n}/4\le n/2$ for $n\ge1$, hence $M=n-(k-1)>n/2$.
+Since $k\le\sqrt{n}/4$, we have $\sqrt{n}/4\le n/2$ (equivalently $\sqrt{n}\le2n$, true for all $n\ge1$),
+so $k-1<k\le\sqrt{n}/4\le n/2$.
+Hence $M=n-(k-1)>n-n/2=n/2$.
 
 \textit{Why $n/2\ge k(k+1)/2$.}
 This is equivalent to $n\ge k(k+1)$.  Since $k\le\sqrt{n}/4$ we have
