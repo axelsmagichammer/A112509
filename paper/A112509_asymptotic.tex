@@ -182,14 +182,76 @@ Moreover, they may be chosen with $|b_i-M/k|\le k$ for all $i$.
 \end{lemma}
 
 \begin{proof}
-Set $q=\lfloor M/k-(k-1)/2\rfloor$ and
-$r=M-(kq+k(k-1)/2)$, so $0\le r<k$.  Define
+\textit{Strategy.}  Consider the arithmetic sequence $c_i=q+k-i$
+($i=1,\ldots,k$), which decreases by~$1$ at each step.  Its sum is
+\begin{equation}\label{eq:basesum}
+  \sum_{i=1}^{k}c_i
+  = kq + \sum_{i=1}^{k}(k-i)
+  = kq + \frac{k(k-1)}{2}.
+\end{equation}
+Choose $q$ so this base sum is as large as possible without exceeding
+$M$, and let $r=M-\sum c_i$ be the shortfall.  We then add $1$ to the
+first $r$ terms to account for the shortfall.
+
+\textit{Definitions.}  Set
+\[
+  q = \Bigl\lfloor \frac{M}{k} - \frac{k-1}{2} \Bigr\rfloor,
+  \qquad
+  r = M - kq - \frac{k(k-1)}{2},
+\]
+and define
 \[
   b_i=\begin{cases}q+k-i+1,&1\le i\le r,\\q+k-i,&r<i\le k.\end{cases}
 \]
-Then $b_1>b_2>\cdots>b_k$, $\sum b_i=M$, and $M\ge k(k+1)/2$ gives
-$q\ge1$, so $b_k\ge1$.  Every $b_i$ lies in the interval $(q,q+k]$,
-which contains $M/k$ and has width $k$.
+
+\textit{Step~1: $0\le r<k$.}
+From the definition of $q$ as a floor, $q\le M/k-(k-1)/2<q+1$.
+Multiplying through by $k$ gives
+\[
+  kq \;\le\; M - \tfrac{k(k-1)}{2} \;<\; k(q+1),
+\]
+so $0\le M-kq-k(k-1)/2<k$, i.e.\ $0\le r<k$.
+
+\textit{Step~2: Strict decrease.}
+We check all three cases for consecutive pairs $b_i>b_{i+1}$.
+\begin{itemize}[nosep]
+  \item \textit{Both in the first case} ($i<r$, so $i+1\le r$ as well):
+    $b_i-b_{i+1}=(q+k-i+1)-(q+k-(i+1)+1)=1>0$.
+  \item \textit{Transition} ($i=r\ge1$, so $i+1>r$):
+    $b_r=q+k-r+1$ and $b_{r+1}=q+k-(r+1)$,
+    giving $b_r-b_{r+1}=q+k-r+1-(q+k-r-1)=2>0$.
+  \item \textit{Both in the second case} ($i>r$):
+    $b_i-b_{i+1}=(q+k-i)-(q+k-i-1)=1>0$.
+\end{itemize}
+Hence $b_1>b_2>\cdots>b_k$.
+
+\textit{Step~3: The sum equals $M$.}
+Split the sum at the boundary between the two cases:
+\begin{align*}
+  \sum_{i=1}^{k}b_i
+  &= \sum_{i=1}^{r}(q+k-i+1) + \sum_{i=r+1}^{k}(q+k-i) \\
+  &= \sum_{i=1}^{k}(q+k-i) + \sum_{i=1}^{r}1 \\
+  &= kq + \frac{k(k-1)}{2} + r \;=\; M,
+\end{align*}
+where the last equality uses the definition of~$r$ and~\eqref{eq:basesum}.
+
+\textit{Step~4: All terms are positive.}
+From $M\ge k(k+1)/2$ we get $M/k\ge(k+1)/2$, so
+\[
+  \frac{M}{k}-\frac{k-1}{2}\;\ge\;\frac{k+1}{2}-\frac{k-1}{2}=1,
+\]
+hence $q=\lfloor M/k-(k-1)/2\rfloor\ge1$.
+Since $r<k$, the index $i=k$ falls in the second case, giving
+$b_k=q+k-k=q\ge1$.
+
+\textit{Step~5: Proximity bound.}
+Every first-case term satisfies $q < q+k-r+1\le b_i\le q+k$, and
+every second-case term satisfies $q\le b_i=q+k-i\le q+k-r-1<q+k$.
+So all $b_i\in[q,\,q+k]$.
+From the floor definition, $M/k\in[q+(k-1)/2,\;q+(k+1)/2)$,
+and the width of $[q,q+k]$ around any point in this interval is at most
+$(k+1)/2<k$ in each direction.
+Hence $|b_i-M/k|<k$ for all~$i$.
 \end{proof}
 
 \subsection{Parameters and string}
