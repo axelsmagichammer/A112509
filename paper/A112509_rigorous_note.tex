@@ -1,0 +1,600 @@
+
+\documentclass[11pt]{article}
+\usepackage{amsmath,amsthm,amssymb,mathtools,geometry}
+\geometry{margin=1in}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+\title{The first asymptotic results for OEIS A112509}
+\author{Ben Clare}
+\date{}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\val}{\nu}
+\newcommand{\ones}{N_1}
+\newcommand{\zeros}{N_0}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+For a binary string $s$ of length $n$, let $f(s)$ be the number of distinct non negative integers represented by contiguous substrings of $s$, interpreted in binary.  Let
+\[
+a(n)=\max_{|s|=n} f(s).
+\]
+Prior to the present work, no asymptotic results appear to have been available for the sequence $a(n)$, although exact values had been computed for small $n$.  In this paper we prove that
+\[
+a(n)\ge \frac12 n^2-O(n^{3/2}),
+\]
+and hence $a(n)/n^2\to 1/2$.  The proof is completely explicit.  We also prove that there exist near optimal strings with density of ones equal to $1-O(n^{-1/2})$, and that every optimal string has density of ones equal to $1-O(n^{-1/4})$.  In addition, we derive upper bounds which penalise both the number and the run structure of the zeros.
+\end{abstract}
+
+\section{Introduction}
+
+For a binary string $s\in\{0,1\}^n$, let $f(s)$ denote the number of distinct non negative integers represented by its contiguous substrings.  Define
+\[
+a(n)=\max_{|s|=n} f(s).
+\]
+This is OEIS sequence A112509.
+
+The most obvious upper bound is obtained by counting substrings:
+\[
+a(n)\le \frac{n(n+1)}{2}.
+\]
+Thus any quadratic asymptotic for $a(n)$ can have leading constant at most $1/2$.  The main result of the paper shows that this upper bound is asymptotically sharp.
+
+\begin{theorem}\label{thm:main-asymptotic}
+As $n\to\infty$,
+\[
+a(n)\ge \frac12 n^2-O(n^{3/2}).
+\]
+Consequently,
+\[
+\lim_{n\to\infty} \frac{a(n)}{n^2}=\frac12.
+\]
+\end{theorem}
+
+We shall actually prove an explicit quantitative version with a concrete constant.
+
+\section{Definitions and elementary bounds}
+
+If $w=w_1\cdots w_k\in\{0,1\}^k$, define its binary value by
+\[
+\val(w)=\sum_{i=1}^k w_i 2^{k-i}.
+\]
+Leading zeros do not affect the value, so for example $\val(01)=\val(1)=1$.
+
+If $s=s_1\cdots s_n$, a substring of $s$ is a word of the form $s_i s_{i+1}\cdots s_j$ with $1\le i\le j\le n$.  Let $V(s)$ be the set of all values represented by substrings of $s$:
+\[
+V(s)=\{\val(s_i\cdots s_j):1\le i\le j\le n\}.
+\]
+Then
+\[
+f(s)=|V(s)|.
+\]
+
+\begin{lemma}\label{lem:trivial-upper}
+For every $n\ge 1$,
+\[
+a(n)\le \frac{n(n+1)}{2}.
+\]
+In particular,
+\[
+\limsup_{n\to\infty}\frac{a(n)}{n^2}\le \frac12.
+\]
+\end{lemma}
+
+\begin{proof}
+A distinct positive represented integer has a unique standard binary expansion beginning with $1$.  Therefore each distinct positive represented integer is represented by at least one substring beginning with $1$, and different positive integers correspond to different such substrings.  Hence the number of distinct positive represented integers is at most the number of substrings beginning with $1$, which is at most the total number of substrings, namely $n(n+1)/2$.
+
+If $0\in V(s)$, this contributes at most one additional value, but then at least one substring begins with $0$, so the number of substrings beginning with $1$ is at most $n(n+1)/2-1$.  Thus even in this case the total number of represented values is at most
+\[
+\left(\frac{n(n+1)}{2}-1\right)+1=\frac{n(n+1)}{2}.
+\]
+If $0\notin V(s)$, then there is no extra value to add.  Therefore $f(s)\le n(n+1)/2$ for every $s$, and taking the maximum gives the result.
+\end{proof}
+
+\section{An explicit construction}
+
+We now construct binary strings with very large distinct value sets.
+
+\begin{lemma}\label{lem:decreasing-blocks}
+Let $k\ge 2$ and $M\ge k(k+1)/2$.  Then there exist strictly decreasing positive integers
+\[
+b_1>b_2>\cdots>b_k\ge 1
+\]
+with
+\[
+\sum_{i=1}^k b_i=M.
+\]
+Moreover, they may be chosen so that all $b_i$ differ from the average $M/k$ by at most $k$:
+\[
+\left|b_i-\frac{M}{k}\right|\le k\qquad (1\le i\le k).
+\]
+\end{lemma}
+
+\begin{proof}
+Set
+\[
+q=\left\lfloor \frac{M}{k}-\frac{k-1}{2}\right\rfloor
+\]
+and define the remainder
+\[
+r=M-\left(kq+\frac{k(k-1)}{2}\right).
+\]
+Since the fractional part of $M/k-(k-1)/2$ lies in $[0,1)$, we have $0\le r<k$.
+
+Now define
+\[
+b_i=
+\begin{cases}
+q+k-i+1,&1\le i\le r,\\
+q+k-i,&r<i\le k.
+\end{cases}
+\]
+Then $b_1>b_2>\cdots>b_k$, and a direct summation gives
+\[
+\sum_{i=1}^k b_i = \left(kq+\frac{k(k-1)}2\right)+r=M.
+\]
+Also, since $M\ge k(k+1)/2$, we have
+\[
+\frac{M}{k}-\frac{k-1}{2}\ge 1,
+\]
+so $q\ge 1$ and hence $b_k\ge q\ge 1$.
+
+Finally, the sequence $(b_i)$ lies in an interval of length less than $k$, namely between $q$ and $q+k$.  Since its average is $M/k$, every term lies within distance at most $k$ from the average.  This proves the final claim.
+\end{proof}
+
+Fix $n\ge 64$ and define
+\[
+k=\left\lfloor \frac{\sqrt n}{4}\right\rfloor,
+\qquad
+M=n-(k+1).
+\]
+By $n\ge 64$ we have $\sqrt n/4\ge 2$, hence $k\ge 2$.  Also,
+\[
+M=n-(k+1)\ge n-\frac{\sqrt n}{4}-1\ge \frac n2
+\]
+for $n\ge 64$, and therefore $M\ge k(k+1)/2$.  So Lemma \ref{lem:decreasing-blocks} applies.
+
+Choose strictly decreasing positive integers $b_1>b_2>\cdots>b_k$ summing to $M$, and define
+\begin{equation}\label{eq:constructed-string}
+s=1^{b_1}0\,1^{b_2}00\,1^{b_3}0\cdots 0\,1^{b_k}.
+\end{equation}
+Then $|s|=n$.
+
+\section{The injective family}
+
+For integers $i,j,\alpha,\beta$ satisfying
+\[
+1\le i<j-1\le k-1,
+\qquad
+1\le \alpha\le b_i,
+\qquad
+1\le \beta\le b_j,
+\]
+let $u_{i,j,\alpha,\beta}$ be the substring of $s$ which starts in the $i$th block of ones, with exactly $\alpha$ ones remaining in that block, and ends in the $j$th block of ones, after exactly $\beta$ ones of that block.  Since $j\ge i+2$, this substring contains at least one full interior one-block.
+
+\begin{lemma}\label{lem:injective}
+The map
+\[
+(i,j,\alpha,\beta)\longmapsto u_{i,j,\alpha,\beta}
+\]
+is injective.
+\end{lemma}
+
+\begin{proof}
+Suppose
+\[
+u_{i,j,\alpha,\beta}=u_{i',j',\alpha',\beta'}.
+\]
+We compare the run lengths of the blocks of ones occurring in this common word.
+
+Because $u_{i,j,\alpha,\beta}$ begins inside the $i$th one-block and ends inside the $j$th one-block, the full interior one-blocks occurring in it are exactly
+\[
+b_{i+1},b_{i+2},\dots,b_{j-1}.
+\]
+Likewise, the full interior one-blocks occurring in $u_{i',j',\alpha',\beta'}$ are exactly
+\[
+b_{i'+1},b_{i'+2},\dots,b_{j'-1}.
+\]
+Since the two substrings are equal as binary words, these consecutive interior block sequences must be equal:
+\[
+b_{i+1},b_{i+2},\dots,b_{j-1}=b_{i'+1},b_{i'+2},\dots,b_{j'-1}.
+\]
+But the global sequence $b_1>b_2>\cdots>b_k$ is strictly decreasing, so any consecutive subsequence occurs in exactly one place.  Therefore
+\[
+i=i'\qquad\text{and}\qquad j=j'.
+\]
+Once $i$ and $j$ are determined, the initial run length of ones in the substring is exactly $\alpha$, and the final run length of ones is exactly $\beta$.  Equality of the substrings therefore implies
+\[
+\alpha=\alpha',\qquad \beta=\beta'.
+\]
+Thus the map is injective.
+\end{proof}
+
+\section{Quantitative lower bound}
+
+\begin{theorem}\label{thm:explicit}
+For every $n\ge 64$,
+\[
+a(n)\ge \frac12 n^2-15n^{3/2}.
+\]
+Consequently,
+\[
+a(n)\ge \frac12 n^2-O(n^{3/2}).
+\]
+\end{theorem}
+
+\begin{proof}
+Let $s$ be the string constructed in \eqref{eq:constructed-string}.  By Lemma \ref{lem:injective}, all substrings $u_{i,j,\alpha,\beta}$ are distinct.  For each pair $(i,j)$ with $1\le i<j-1\le k$, there are exactly $b_i b_j$ choices of $(\alpha,\beta)$.  Therefore
+\[
+f(s)\ge \sum_{1\le i<j-1\le k} b_i b_j.
+\]
+Now
+\[
+\sum_{1\le i<j-1\le k} b_i b_j
+=
+\sum_{1\le i<j\le k} b_i b_j
+-
+\sum_{i=1}^{k-1} b_i b_{i+1}.
+\]
+Also,
+\[
+\sum_{1\le i<j\le k} b_i b_j
+=
+\frac12\left(\left(\sum_{i=1}^k b_i\right)^2-\sum_{i=1}^k b_i^2\right).
+\]
+Since $\sum b_i=M=n-(k+1)$, we obtain
+\begin{equation}\label{eq:master-lower}
+f(s)
+\ge
+\frac12 (n-k-1)^2
+-
+\frac12\sum_{i=1}^k b_i^2
+-
+\sum_{i=1}^{k-1} b_i b_{i+1}.
+\end{equation}
+
+We now estimate the three error terms.
+
+First, since $k=\lfloor \sqrt n/4\rfloor$, we have
+\[
+k\le \frac{\sqrt n}{4}.
+\]
+Hence
+\[
+\frac12 (n-k-1)^2
+\ge
+\frac12 n^2-n(k+1)
+\ge
+\frac12 n^2-\frac14 n^{3/2}-n.
+\]
+Because $n\ge 64$, we have $n\le n^{3/2}/8$.  Therefore
+\begin{equation}\label{eq:first-term}
+\frac12 (n-k-1)^2
+\ge
+\frac12 n^2-\frac38 n^{3/2}.
+\end{equation}
+
+Next, because $k=\lfloor \sqrt n/4\rfloor$ and $\sqrt n/4\ge 2$, we also have
+\[
+k\ge \frac{\sqrt n}{8}.
+\]
+Indeed, if $x\ge 2$ then $\lfloor x\rfloor\ge x/2$.
+
+By Lemma \ref{lem:decreasing-blocks}, each $b_i$ differs from the average $M/k$ by at most $k$.  Hence
+\[
+\left|b_i-\frac{M}{k}\right|\le k.
+\]
+Writing $b_i=M/k+d_i$ with $|d_i|\le k$, we get
+\[
+\sum_{i=1}^k b_i^2
+=
+\sum_{i=1}^k \left(\frac{M}{k}+d_i\right)^2
+=
+\frac{M^2}{k}+\sum_{i=1}^k d_i^2
+\le
+\frac{M^2}{k}+k^3.
+\]
+Since $M\le n$ and $k\ge \sqrt n/8$, this gives
+\[
+\frac{M^2}{k}\le 8n^{3/2}.
+\]
+Also, since $k\le \sqrt n/4$,
+\[
+k^3\le \frac{1}{64}n^{3/2}.
+\]
+Therefore
+\begin{equation}\label{eq:sumsq-bound}
+\sum_{i=1}^k b_i^2\le \frac{513}{64}n^{3/2}<9n^{3/2}.
+\end{equation}
+
+Finally, for the adjacent product term we use the elementary inequality $xy\le (x^2+y^2)/2$:
+\[
+\sum_{i=1}^{k-1} b_i b_{i+1}
+\le
+\frac12 \sum_{i=1}^{k-1}(b_i^2+b_{i+1}^2)
+\le
+\sum_{i=1}^k b_i^2.
+\]
+Combining this with \eqref{eq:sumsq-bound}, we obtain
+\begin{equation}\label{eq:adj-bound}
+\sum_{i=1}^{k-1} b_i b_{i+1}<9n^{3/2}.
+\end{equation}
+
+Substituting \eqref{eq:first-term}, \eqref{eq:sumsq-bound}, and \eqref{eq:adj-bound} into \eqref{eq:master-lower} yields
+\[
+f(s)
+\ge
+\left(\frac12 n^2-\frac38 n^{3/2}\right)-\frac12\cdot 9n^{3/2}-9n^{3/2}
+>
+\frac12 n^2-14n^{3/2}.
+\]
+In particular,
+\[
+f(s)\ge \frac12 n^2-15n^{3/2}.
+\]
+Since $a(n)\ge f(s)$, the theorem follows.
+\end{proof}
+
+\begin{corollary}
+The limit
+\[
+\lim_{n\to\infty}\frac{a(n)}{n^2}
+\]
+exists and is equal to $1/2$.
+\end{corollary}
+
+\begin{proof}
+By Lemma \ref{lem:trivial-upper},
+\[
+\frac{a(n)}{n^2}\le \frac{n+1}{2n}\to \frac12.
+\]
+By Theorem \ref{thm:explicit},
+\[
+\frac{a(n)}{n^2}\ge \frac12-\frac{15}{\sqrt n}\to \frac12.
+\]
+The squeeze theorem gives the result.
+\end{proof}
+
+\section{Density of ones in near optimal strings}
+
+The explicit construction immediately yields near optimal strings with density of ones tending to $1$.
+
+\begin{proposition}\label{prop:near-optimal-density}
+There exists a family of binary strings $s_n$ such that
+\[
+f(s_n)\ge \frac12 n^2-O(n^{3/2})
+\]
+and
+\[
+\frac{\ones(s_n)}{n}=1-O(n^{-1/2}).
+\]
+Equivalently,
+\[
+\zeros(s_n)=O(\sqrt n).
+\]
+\end{proposition}
+
+\begin{proof}
+Take $s_n$ to be the explicit string from \eqref{eq:constructed-string}.  By Theorem \ref{thm:explicit},
+\[
+f(s_n)\ge \frac12 n^2-O(n^{3/2}).
+\]
+The string contains exactly $k+1$ zeroes: one in every separator except the second, which contributes one extra zero.  Since
+\[
+k=\left\lfloor \frac{\sqrt n}{4}\right\rfloor,
+\]
+we have
+\[
+\zeros(s_n)=k+1=O(\sqrt n).
+\]
+Therefore
+\[
+\ones(s_n)=n-\zeros(s_n)=n-O(\sqrt n),
+\]
+and dividing by $n$ gives
+\[
+\frac{\ones(s_n)}{n}=1-O(n^{-1/2}).
+\]
+\end{proof}
+
+\section{Upper bounds in terms of zeros}
+
+We now derive general upper bounds for an arbitrary binary string in terms of the number, positions, and run structure of its zeroes.
+
+
+\begin{lemma}\label{lem:zero-position}
+Let $s\in\{0,1\}^n$, and let its zero positions be
+\[
+p_1<p_2<\cdots<p_z.
+\]
+Then
+\[
+f(s)\le \frac{n(n+1)}{2}-\sum_{r=1}^z (n-p_r+1).
+\]
+In particular,
+\[
+f(s)\le \frac{n(n+1)}{2}-\frac{z(z+1)}{2}.
+\]
+\end{lemma}
+
+\begin{proof}
+For each $x\in V(s)$, choose one substring $w_x$ of $s$ with $\val(w_x)=x$, subject to the condition that $w_x$ has minimal length among all substrings representing $x$.
+
+The map
+\[
+x\longmapsto w_x
+\]
+is injective.  Indeed, if $w_x=w_y$ as binary strings, then
+\[
+x=\val(w_x)=\val(w_y)=y.
+\]
+
+Now suppose $x>0$.  Then the first bit of $w_x$ must be $1$.  For if the first bit were $0$, then deleting all leading zeros from $w_x$ would produce a strictly shorter substring of $s$ with the same value, contradicting the minimality of $w_x$.
+
+It follows that every positive represented integer has a chosen representative beginning with $1$.  Hence the number of distinct positive represented integers is at most the number of substrings of $s$ beginning with $1$.
+
+There are exactly $n(n+1)/2$ substrings in total.  For each zero position $p_r$, exactly $n-p_r+1$ substrings begin at that position, and none of them begins with $1$.  Therefore the number of substrings beginning with $1$ is at most
+\[
+\frac{n(n+1)}{2}-\sum_{r=1}^z (n-p_r+1).
+\]
+
+If $0\notin V(s)$, this already bounds $f(s)$.  If $0\in V(s)$, then the one-bit substring $0$ occurs at some zero position and is among the substrings excluded in the count above.  Thus including the value $0$ does not increase the right hand side.  In either case,
+\[
+f(s)\le \frac{n(n+1)}{2}-\sum_{r=1}^z (n-p_r+1).
+\]
+
+For fixed $z$, the right hand side is maximised when the zeroes are as far to the right as possible, namely when
+\[
+p_r=n-z+r\qquad (1\le r\le z).
+\]
+Then
+\[
+\sum_{r=1}^z (n-p_r+1)=1+2+\cdots+z=\frac{z(z+1)}{2},
+\]
+which yields the second inequality.
+\end{proof}
+
+\begin{corollary}\label{cor:optimal-density-weak}
+If $s_n$ is an optimal string of length $n$ and $z_n=\zeros(s_n)$, then
+\[
+z_n=O(n^{3/4}).
+\]
+Equivalently,
+\[
+\frac{\ones(s_n)}{n}=1-O(n^{-1/4}).
+\]
+\end{corollary}
+
+\begin{proof}
+Let $s_n$ be optimal.  Then by Theorem \ref{thm:explicit},
+\[
+\frac12 n^2-15n^{3/2}\le a(n)=f(s_n).
+\]
+By Lemma \ref{lem:zero-position},
+\[
+f(s_n)\le \frac{n(n+1)}2-\frac{z_n(z_n+1)}2.
+\]
+Combining the two inequalities gives
+\[
+\frac{z_n(z_n+1)}2\le 15n^{3/2}+\frac n2+1.
+\]
+Thus $z_n^2=O(n^{3/2})$, so $z_n=O(n^{3/4})$.  Since $\ones(s_n)=n-z_n$, dividing by $n$ yields the density statement.
+\end{proof}
+
+\section{A run sensitive upper bound}
+
+Let the maximal zero-runs of a binary string $s$ have lengths $c_1,\dots,c_m$, and let the $i$th zero-run begin at position $a_i$.  Define $r_i$ to be the number of positions strictly to the right of the $i$th zero-run.  Equivalently,
+\[
+r_i=n-(a_i+c_i)+1.
+\]
+
+\begin{lemma}\label{lem:run-sensitive}
+With the above notation,
+\[
+f(s)\le \frac{n(n+1)}2+1-\sum_{i=1}^m\left(c_i(n-a_i-c_i+1)+\binom{c_i+1}{2}\right).
+\]
+Equivalently,
+\[
+f(s)\le \frac{n(n+1)}2+1-\sum_{i=1}^m\left(c_i r_i+\binom{c_i+1}{2}\right).
+\]
+\end{lemma}
+
+\begin{proof}
+Apply Lemma \ref{lem:zero-position} and group the sum by zero-runs.  If the $i$th run occupies positions
+\[
+a_i,a_i+1,\dots,a_i+c_i-1,
+\]
+then its contribution to the sum in Lemma \ref{lem:zero-position} is
+\[
+\sum_{t=0}^{c_i-1}(n-a_i-t+1)
+=
+c_i(n-a_i+1)-\frac{c_i(c_i-1)}{2}.
+\]
+Now
+\[
+r_i=n-(a_i+c_i)+1=n-a_i-c_i+1,
+\]
+so
+\[
+c_i(n-a_i+1)-\frac{c_i(c_i-1)}{2}
+=
+c_i r_i+\binom{c_i+1}{2}.
+\]
+Summing over all zero-runs gives the result.
+\end{proof}
+
+\begin{corollary}\label{cor:fragmentation}
+If a binary string $s$ has $z$ zeroes arranged in $m$ maximal zero-runs, then
+\[
+f(s)\le \frac{n(n+1)}2+1-\frac{z(z+1)}2-\frac{m(m-1)}2.
+\]
+\end{corollary}
+
+\begin{proof}
+By Lemma \ref{lem:run-sensitive},
+\[
+f(s)\le \frac{n(n+1)}2+1-\sum_{i=1}^m\left(c_i r_i+\binom{c_i+1}{2}\right).
+\]
+Since distinct zero-runs are separated by at least one $1$, for $i<m$ we have
+\[
+r_i\ge \sum_{j>i} c_j +(m-i),
+\]
+while $r_m\ge 0$.  Therefore
+\[
+\sum_{i=1}^m c_i r_i
+\ge
+\sum_{i<j} c_i c_j+\sum_{i=1}^{m-1} c_i(m-i).
+\]
+Hence
+\[
+\sum_{i=1}^m\left(c_i r_i+\binom{c_i+1}{2}\right)
+\ge
+\sum_{i<j} c_i c_j+\sum_{i=1}^m\binom{c_i+1}{2}+\sum_{i=1}^{m-1} c_i(m-i).
+\]
+Now
+\[
+\sum_{i<j} c_i c_j+\sum_{i=1}^m\binom{c_i+1}{2}=\binom{z+1}{2},
+\]
+because $z=\sum c_i$ and
+\[
+\binom{z+1}{2}=\frac{z^2+z}{2}=\sum_{i<j} c_i c_j+\sum_{i=1}^m \frac{c_i^2+c_i}{2}.
+\]
+It remains to bound the final term.  Since each $c_i\ge 1$, the quantity
+\[
+\sum_{i=1}^{m-1} c_i(m-i)
+\]
+is minimised when $c_1=\cdots=c_{m-1}=1$ and all remaining zeroes are placed in the final run.  In that case the minimum is
+\[
+(m-1)+(m-2)+\cdots+1=\binom m2.
+\]
+Therefore
+\[
+\sum_{i=1}^m\left(c_i r_i+\binom{c_i+1}{2}\right)
+\ge
+\binom{z+1}{2}+\binom m2,
+\]
+and the claimed bound follows.
+\end{proof}
+
+\section{Computational evidence}
+
+The theoretical results above are fully rigorous and self contained.  We briefly record the main computational findings which motivated them.
+
+Exact values of $a(n)$ were computed for $1\le n\le 150$, extending the previously known range, and lower bounds were obtained up to $n=2\times 10^9$.  In particular, the ratio $a(n)/n^2$ rises from $0.3596$ at $n=50$ to $0.4031$ at $n=150$, while the large scale lower bounds already give $a(n)/n^2\ge 0.49996$ at $n=2\times 10^9$.  Three independent computational methods were compared on overlapping ranges: unconstrained Metropolis--Hastings search, constrained Metropolis--Hastings search, and exact exhaustive search over a run length template.  On the overlap where more than one source was available, the best values agreed across methods.  The unconstrained Metropolis--Hastings search was particularly effective: in the range $n\le 150$, at least one out of ten independent unconstrained restarts reached the optimum for every $n$ considered.
+
+The updated extended results also show that the set of optimal strings has very low empirical entropy.  If $S_n$ denotes the set of optimal strings and $H(n)=\log_2|S_n|$, then for $n\le 150$ the quantity $H(n)$ is almost always zero or very small, remains below $4$, and the optimal strings typically share long common prefixes.  Likewise, for $n\le 150$ the longest common zero-separator prefix is completely rigid in 28 cases, varies by at most one separator in 119 further cases, and shows larger variation only at the three values $n=51,70,116$.
+
+\section{Heuristic remarks}
+
+The proofs in this paper use only the explicit construction and the zero-penalty arguments above.  Nevertheless, the computational data suggests a clear heuristic mechanism.  The objective is to maximise the number of substrings beginning with $1$ that remain distinct after leading zeros are stripped.  Long repeated patterns create large common-prefix collisions, so strings with many short repeated blocks perform poorly.  By contrast, the explicit construction front loads the ones into a small number of long decreasing blocks, separated by very short zero-runs.  This creates many substrings while suppressing long scale repetition.  The empirically observed optimal strings appear to exploit the same principle, but in a more refined form.
+
+\end{document}
