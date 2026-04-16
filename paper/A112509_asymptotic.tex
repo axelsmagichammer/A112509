@@ -79,9 +79,14 @@ A112509~\cite{oeis}, beginning
 
 \subsection{Numerical evidence}
 
-Exact values for $n\le150$ were computed in~\cite{github} by
-exhaustive structured search, and certified lower bounds obtained for
-much larger $n$ via suffix-array-guided local search.
+Exact values for $n\le80$ are due to M.\ Fuller and appear in the OEIS
+b-file~\cite{oeis}; no algorithm or proof of completeness was published.
+Heuristic values for $81\le n\le150$ were computed in~\cite{github}
+using multiple independent Metropolis--Hastings and template-search
+methods, with consistent agreement between methods but no formal proof
+of optimality.
+Certified lower bounds for much larger $n$ were obtained via
+suffix-array-guided local search~\cite{github}.
 Table~\ref{tab:evidence} records selected values.
 
 \begin{table}[ht]
@@ -98,7 +103,10 @@ $10^9$          & $499{,}943{,}911{,}277{,}037{,}650$      & $0.49994$ \\
 $2\times10^9$   & $1{,}999{,}841{,}302{,}297{,}432{,}600$ & $0.49996$ \\
 \bottomrule
 \end{tabular}
-\caption{Selected values and lower bounds for $a(n)$.}
+\caption{Selected values and lower bounds for $a(n)$.
+  Values for $n\le80$ are from Fuller~\cite{oeis};
+  values for $81\le n\le150$ are heuristic computational estimates~\cite{github};
+  large-$n$ entries are certified lower bounds~\cite{github}.}
 \label{tab:evidence}
 \end{table}
 
