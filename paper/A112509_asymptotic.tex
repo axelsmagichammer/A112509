@@ -47,26 +47,21 @@
 \maketitle
 
 \begin{abstract}
-For a binary string $s$ of length $n$, let $f(s)$ be the number of
-distinct non-negative integers represented by contiguous substrings of
-$s$, read in binary with leading zeros suppressed.  Define
-$a(n)=\max_{|s|=n}f(s)$ (OEIS A112509~\cite{oeis}).  The present paper
-provides the first asymptotic results for this sequence.
-
-We prove that for all $n\ge 64$,
+For a binary string $s$ of length $n$, let $f(s)$ denote the number of
+distinct non-negative integers whose binary representations appear as
+contiguous substrings of $s$ (leading zeros suppressed), and set
+$a(n)=\max_{|s|=n}f(s)$ (OEIS A112509~\cite{oeis}).
+We prove three results.
+First, $\lim_{n\to\infty}a(n)/n^2=\frac{1}{2}$; more precisely,
+for all $n\ge64$,
 \[
-  a(n) \;\ge\; \tfrac{1}{2}n^2 - 15\,n^{3/2},
+  \tfrac{1}{2}n^2 - 15\,n^{3/2} \;\le\; a(n) \;\le\; \tfrac{n(n+1)}{2},
 \]
-and hence $\lim_{n\to\infty}a(n)/n^2=\tfrac{1}{2}$, matching the
-elementary upper bound $a(n)\le n(n+1)/2$.  The proof is completely
-explicit.  Beyond the limit, we prove:\ (i)~near-optimal strings can
-be chosen with ones-density $1-O(n^{-1/2})$;\ (ii)~every optimal
-string has ones-density $1-O(n^{-1/4})$;\ (iii)~the number of zeros
-$z$ in any string $s$ reduces the maximum possible $f(s)$ by at least
-$z(z+1)/2$;\ (iv)~fragmenting the zeros into $m$ runs imposes an
-additional penalty of at least $\binom{m}{2}$.  Computational data for
-$n\le150$ and certified lower bounds through $n=2\times10^9$ are
-discussed~\cite{github}.
+so $a(n)/n^2 = \frac{1}{2}+O(n^{-1/2})$.
+Second, every optimal string has ones-density $1-O(n^{-1/4})$;
+explicit near-optimal strings achieving this bound are constructed.
+Third, $a(n)$ is convex: $a(n+1)-2a(n)+a(n-1)\ge0$ for all $n\ge2$,
+so the first differences $\Delta a(n)$ are nondecreasing.
 \end{abstract}
 
 \section{Introduction}
@@ -131,11 +126,20 @@ For every $n\ge64$,
 \end{enumerate}
 \end{proposition}
 
+\begin{theorem}[Convexity]\label{thm:convex}
+For every $n\ge2$,
+\[
+  a(n+1)-2a(n)+a(n-1)\;\ge\;0.
+\]
+Equivalently, $\Delta a(n):=a(n)-a(n-1)$ is nondecreasing for $n\ge2$.
+\end{theorem}
+
 Section~\ref{sec:upper} gives the upper bound.
 Sections~\ref{sec:construction}--\ref{sec:lower} prove
 Theorems~\ref{thm:limit}--\ref{thm:quant}.
 Section~\ref{sec:density} proves Proposition~\ref{prop:density}.
 Sections~\ref{sec:zeros}--\ref{sec:runs} develop the structural bounds.
+Section~\ref{sec:convex} proves Theorem~\ref{thm:convex}.
 
 \section{Definitions}
 
@@ -540,14 +544,280 @@ Each additional run incurs an extra penalty of at least $m-1$ (the new
 run number), on top of the baseline $z(z+1)/2$.
 \end{remark}
 
+\section{Convexity of the sequence}\label{sec:convex}
+
+The computational data (Table~\ref{tab:evidence} and~\cite{github})
+show that the second differences
+$\Delta^2 a(n):=a(n+1)-2a(n)+a(n-1)$ take only the values
+$\{0,1,2\}$ for all $n\le200$.  We now prove one half of this
+observation: $\Delta^2 a(n)\ge0$ for all $n\ge2$.  The proof is purely
+combinatorial and does not rely on the explicit construction of
+Section~\ref{sec:construction}.
+
+\subsection{Background and strategy}
+
+Write $\Delta a(n)=a(n)-a(n-1)$ for $n\ge2$.  The claim
+$\Delta^2 a(n)\ge0$ is equivalent to
+\begin{equation}\label{eq:convex-equiv}
+  a(n+1)\;\ge\;a(n)+\Delta a(n)=2a(n)-a(n-1).
+\end{equation}
+That is, we must exhibit a string of length $n+1$ achieving at least
+$a(n)+\Delta a(n)$ distinct substring values.
+
+The strategy is to start from an \emph{optimal} string~$s$ of
+length~$n$ and extend it by one bit (appending or prepending).  The key
+insight is that the values in $V(s)$ that are ``new'' relative to a
+length-$(n{-}1)$ truncation of~$s$ can each be ``lifted'' to a
+genuinely new value in the extended string, and there are at least
+$\Delta a(n)$ such values.
+
+\subsection{Notation and setup}
+
+Fix $n\ge2$ and let $s=s_1 s_2\cdots s_n$ be an optimal string of
+length~$n$, so $f(s)=a(n)$.  Define the prefix and suffix of
+length~$n-1$:
+\begin{equation}\label{eq:pq}
+  p=s_1 s_2\cdots s_{n-1},\qquad q=s_2 s_3\cdots s_n.
+\end{equation}
+Since every substring of~$p$ (resp.\ $q$) is also a substring of~$s$,
+we have $V(p)\subseteq V(s)$ and $V(q)\subseteq V(s)$.
+
+Since $p$ has length $n-1$, we have $f(p)\le a(n-1)$.  Therefore
+\begin{equation}\label{eq:Vdiff-p}
+  |V(s)\setminus V(p)| = f(s)-f(p)
+    \;\ge\; a(n)-a(n-1)=\Delta a(n),
+\end{equation}
+and by the same argument applied to the suffix,
+\begin{equation}\label{eq:Vdiff-q}
+  |V(s)\setminus V(q)| \;\ge\; \Delta a(n).
+\end{equation}
+Each value $x\in V(s)\setminus V(p)$ is represented in~$s$ but not
+in the prefix~$p$; every witness for~$x$ must ``touch'' the last
+position.  Symmetrically, each value in $V(s)\setminus V(q)$ has every
+witness touching the first position.
+
+\subsection{Unique standard representation}
+
+Recall that every positive integer $x$ has a \emph{standard binary
+representation}: the unique binary string starting with~$\mathtt{1}$
+and having value~$x$.  Its length is $\lfloor\log_2 x\rfloor+1$.
+If $w$ is any other binary string with $\val(w)=x>0$, then either $w$
+starts with~$\mathtt{0}$ (leading zeros) or has the same length as the
+standard form; in the latter case it is the standard form itself.
+
+For a positive $x\in V(s)$, define the \emph{canonical witness}
+$w_x$ to be a minimum-length substring of~$s$ with $\val(w_x)=x$.
+Then:
+
+\begin{lemma}\label{lem:canon}
+If $x>0$ then $w_x$ is the standard binary representation of~$x$.
+\end{lemma}
+
+\begin{proof}
+If $w_x$ started with~$\mathtt{0}$, removing the leading zero gives a
+strictly shorter substring of~$s$ with the same value, contradicting
+the minimality of~$w_x$.  So $w_x$ starts with~$\mathtt{1}$.  Its
+length is at least $\lfloor\log_2 x\rfloor+1$ (the length of the
+standard form); by minimality, equality holds, so $w_x$ has the same
+length as the standard form.  Since both start with~$\mathtt{1}$ and
+represent~$x$, they are the same binary string.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:convex}]
+
+\textbf{Step~1:\ new positive values must touch the boundary.}
+
+Let $x\in V(s)\setminus V(p)$ with $x>0$.  Its canonical witness
+$w_x$ is, by Lemma~\ref{lem:canon}, the standard representation
+of~$x$; in particular $w_x$ starts with~$\mathtt{1}$.
+
+\textit{Claim:}\ $w_x$ ends at position~$n$ (the last position
+of~$s$).
+
+\textit{Proof.}\ Write $w_x=s_i\cdots s_j$.  If $j\le n-1$ then
+$w_x$ is a substring of $p=s_1\cdots s_{n-1}$, giving $x\in V(p)$
+and contradicting $x\in V(s)\setminus V(p)$.  Hence $j=n$.
+
+\medskip
+\textbf{Step~2:\ appending a bit creates a new value.}
+
+Fix any $b\in\{0,1\}$ and form the extended string
+$sb=s_1\cdots s_n b$ of length $n+1$.
+
+The word $w_x b$ occurs as a substring of~$sb$ ending at the new
+last position.  Since $w_x$ starts with~$\mathtt{1}$ and has length
+$\ell:=|w_x|$, the string $w_x b$ starts with~$\mathtt{1}$ and has
+length $\ell+1$, representing the integer
+$\val(w_x b)=2\,\val(w_x)+b=2x+b$.
+
+\textit{Claim:}\ $w_x b$ is the standard representation of $2x+b$.
+
+\textit{Proof.}\ Since $w_x$ is the standard representation of~$x$,
+we have $2^{\ell-1}\le x<2^{\ell}$, so
+$2^{\ell}\le 2x+b<2^{\ell+1}$.  Hence the standard representation
+of~$2x+b$ has exactly $\ell+1$ bits.  The string $w_x b$ starts
+with~$\mathtt{1}$, has $\ell+1$ bits, and has value $2x+b$; it is
+therefore the standard representation.
+
+\textit{Claim:}\ $2x+b\notin V(s)$.
+
+\textit{Proof.}\ Suppose $2x+b\in V(s)$.  Take a minimum-length
+representative~$u$ of~$2x+b$ in~$s$.  Since $2x+b>0$, by
+Lemma~\ref{lem:canon} the substring~$u$ is the standard
+representation of~$2x+b$, which we have just shown to be~$w_x b$.
+Hence $u=w_x b$, and $s$ contains $w_x b$ as a contiguous
+substring.  Let $w_x b=s_i\cdots s_{i+\ell}$.  Deleting the last
+character gives $w_x=s_i\cdots s_{i+\ell-1}$ with
+$i+\ell-1\le n-1$ (since $i+\ell\le n$), so $w_x$ is a
+substring of the prefix~$p$.  This gives $x=\val(w_x)\in V(p)$,
+contradicting $x\in V(s)\setminus V(p)$.
+
+\smallskip
+Therefore $2x+b\in V(sb)\setminus V(s)$ for each positive
+$x\in V(s)\setminus V(p)$.  Distinct values $x\ne x'$ yield
+distinct $2x+b\ne2x'+b$ (the map $x\mapsto 2x+b$ is injective on
+the integers), so
+\begin{equation}\label{eq:append-gain}
+  f(sb)-f(s)
+  \;\ge\;
+  |\{x\in V(s)\setminus V(p):x>0\}|
+  \;=\;
+  |V(s)\setminus V(p)|-\mathbf{1}[0\in V(s)\setminus V(p)],
+\end{equation}
+where $\mathbf{1}[\cdot]$ denotes the indicator.
+
+\medskip
+\textbf{Step~3:\ the generic case ($0\notin V(s)\setminus V(p)$).}
+
+If $0\notin V(s)\setminus V(p)$, then every element of
+$V(s)\setminus V(p)$ is positive, and~\eqref{eq:append-gain}
+becomes
+\[
+  f(sb)-f(s)\ge|V(s)\setminus V(p)|\ge\Delta a(n)
+  \qquad\text{(by~\eqref{eq:Vdiff-p})}.
+\]
+Hence $a(n+1)\ge f(sb)\ge a(n)+\Delta a(n)$, i.e.\
+$\Delta a(n+1)\ge\Delta a(n)$.
+
+\medskip
+\textbf{Step~4:\ the exceptional case ($0\in V(s)\setminus V(p)$).}
+
+Assume $0\in V(s)\setminus V(p)$.  We show this forces a very
+specific structure and then switch to the suffix argument.
+
+Since $0\in V(s)$, the string~$s$ contains at least one~$\mathtt{0}$.
+Since $0\notin V(p)$, the prefix $p=s_1\cdots s_{n-1}$ contains
+\emph{no} zero, so $p=\mathtt{1}^{n-1}$.  Combined with the existence
+of a zero in~$s$ and $s_1=\cdots=s_{n-1}=1$, we must have $s_n=0$, so
+\begin{equation}\label{eq:special-s}
+  s\;=\;\mathtt{1}^{n-1}\mathtt{0}.
+\end{equation}
+
+The suffix is $q=s_2\cdots s_n=\mathtt{1}^{n-2}\mathtt{0}$, which
+contains a zero, so $0\in V(q)$.  Therefore
+\begin{equation}\label{eq:0-not-in-diff-q}
+  0\;\notin\; V(s)\setminus V(q),
+\end{equation}
+and every element of $V(s)\setminus V(q)$ is positive.
+
+\medskip
+\textbf{Step~5:\ prepending a $\mathtt{1}$ creates a new value.}
+
+Let $x\in V(s)\setminus V(q)$.  By~\eqref{eq:0-not-in-diff-q}, $x>0$.
+Its canonical witness $w_x$ is the standard representation of~$x$
+(Lemma~\ref{lem:canon}).
+
+\textit{Claim:}\ $w_x$ starts at position~$1$ (the first position
+of~$s$).
+
+\textit{Proof.}\ Write $w_x=s_i\cdots s_j$.  If $i\ge2$ then
+$w_x$ is a substring of $q=s_2\cdots s_n$, giving $x\in V(q)$,
+contradicting $x\in V(s)\setminus V(q)$.  Hence $i=1$.
+
+Form the extended string $\mathtt{1}s=\mathtt{1}\,s_1\cdots s_n$ of
+length $n+1$.  Since $w_x$ starts at position~$1$ of~$s$, the word
+$\mathtt{1}\,w_x$ occurs as a prefix of~$\mathtt{1}s$ (starting at
+position~$1$ of~$\mathtt{1}s$).
+
+Let $\ell=|w_x|$ and define $y=\val(\mathtt{1}\,w_x)=2^{\ell}+x$.
+
+\textit{Claim:}\ $\mathtt{1}\,w_x$ is the standard representation
+of~$y$.
+
+\textit{Proof.}\ Since $w_x$ is the standard representation of~$x$
+with $\ell$ bits, we have $2^{\ell-1}\le x<2^{\ell}$, so
+$2^{\ell}\le y=2^{\ell}+x<2^{\ell+1}$.  Hence the standard
+representation of~$y$ has exactly $\ell+1$ bits.  The string
+$\mathtt{1}\,w_x$ starts with~$\mathtt{1}$, has $\ell+1$ bits, and
+has value~$y$; it is therefore the standard representation.
+
+\textit{Claim:}\ $y\notin V(s)$.
+
+\textit{Proof.}\ Suppose $y\in V(s)$.  Take a minimum-length
+representative~$u$ of~$y$ in~$s$.  Since $y>0$, by
+Lemma~\ref{lem:canon} $u$ is the standard representation of~$y$,
+namely $\mathtt{1}\,w_x$.  So $s$ contains $\mathtt{1}\,w_x$ as a
+contiguous substring, say $\mathtt{1}\,w_x=s_i\cdots s_{i+\ell}$.
+Deleting the first character gives $w_x=s_{i+1}\cdots s_{i+\ell}$
+with $i+1\ge2$, so $w_x$ is a substring of $q=s_2\cdots s_n$.  This
+gives $x\in V(q)$, contradicting $x\in V(s)\setminus V(q)$.
+
+Therefore $y\in V(\mathtt{1}s)\setminus V(s)$ for each
+$x\in V(s)\setminus V(q)$.
+
+\textit{Claim:}\ distinct values of~$x$ yield distinct values of~$y$.
+
+\textit{Proof.}\ Let $x\ne x'$ with canonical witnesses of lengths
+$\ell$ and $\ell'$ respectively. Then $y=2^{\ell}+x$ and
+$y'=2^{\ell'}+x'$.  If $\ell=\ell'$, then $y\ne y'$ since $x\ne x'$.
+If $\ell<\ell'$, then $y=2^{\ell}+x<2^{\ell+1}\le2^{\ell'}\le y'$.
+In both cases $y\ne y'$.
+
+\smallskip
+Hence
+\[
+  f(\mathtt{1}s)-f(s)
+  \;\ge\;
+  |V(s)\setminus V(q)|
+  \;\ge\;
+  \Delta a(n)
+  \qquad\text{(by~\eqref{eq:Vdiff-q})},
+\]
+and $a(n+1)\ge f(\mathtt{1}s)\ge a(n)+\Delta a(n)$, i.e.\
+$\Delta a(n+1)\ge\Delta a(n)$.
+
+\medskip
+In both the generic case (Step~3) and the exceptional case (Steps~4--5),
+we have shown $\Delta a(n+1)\ge\Delta a(n)$, completing the proof.
+\end{proof}
+
+\begin{remark}\label{rem:convex-upper}
+Theorem~\ref{thm:convex} shows $\Delta^2 a(n)\ge0$.  Computational
+data~\cite{github} further suggest $\Delta^2 a(n)\le2$ for all
+$n\ge2$: the second differences take only the values $\{0,1,2\}$ for
+all $n\le200$, with the value $2$ occurring at seven values of~$n$
+($52, 71, 117, 157, 178, 191, 194$).  Proving the upper bound
+$\Delta^2 a(n)\le2$ remains open.
+\end{remark}
+
 \section{Computational evidence}\label{sec:comp}
 
-\paragraph{Exact values ($n\le150$).}
-Exact values of $a(n)$ were computed for all $n\le150$ in~\cite{github}
-using three independent methods: unconstrained Metropolis--Hastings
-search (at most 10~restarts, reaching the optimum for every $n\le150$),
-constrained Metropolis--Hastings with a fixed run-length template, and
-exact exhaustive template search.  On every overlap the methods agreed.
+\paragraph{Known exact values ($n\le80$).}
+Exact values for $n\le80$ appear in the OEIS b-file submitted by
+M.\ Fuller in 2008/9~\cite{oeis}.  No algorithm or proof of completeness
+was published; the values have the status of well-verified computational
+claims.
+
+\paragraph{Heuristic values ($81\le n\le150$).}
+Values of $a(n)$ for $81\le n\le150$ were computed in~\cite{github}
+using three independent heuristic methods: unconstrained
+Metropolis--Hastings search (at most 10~restarts), constrained
+Metropolis--Hastings with a fixed run-length template, and exhaustive
+template search over empirically derived block-range constraints.
+All three methods agreed on every overlapping case, giving high
+confidence in the values; however, these results are \emph{not formally
+proved to be exact} and should be understood as heuristic computational
+estimates.
 
 \paragraph{Large-scale certified lower bounds.}
 A suffix-array-guided local search (\emph{surgical nudge}) was used for
