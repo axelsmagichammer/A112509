@@ -2,7 +2,7 @@
 
 > **A112509(n)** = the maximum number of distinct non-negative integers whose binary representations occur as contiguous substrings of some n-bit binary string.
 
-This repository contains algorithms, analysis tools, and pre-computed data for exploring [OEIS sequence A112509](https://oeis.org/A112509) and six related sequences. Results extend the known values from n = 80 (Martin Fuller, OEIS) to **n = 200**, with certified lower bounds computed up to **n = 2 billion**.
+This repository contains algorithms, analysis tools, and pre-computed data for exploring [OEIS sequence A112509](https://oeis.org/A112509) and six related sequences. Exact proven values extend from n = 80 (Martin Fuller, OEIS) to **n = 111** via branch-and-bound, with heuristic lower bounds computed up to **n = 2 billion**.
 
 ## The Problem
 
@@ -28,15 +28,17 @@ a(n): 1   3   5   7  10  13  17  22  27  33  40  47  55  64  73  83  94 106 118 
 
 ## Related OEIS Sequences
 
-| Sequence | Description | Range in this repo |
-| ---------- | ------------- | -------------------- |
-| **A112509** | Max distinct integers (including 0) from n-bit substrings | n = 1–200 |
-| **A112510** | Smallest n-bit number achieving A112509(n) | n = 1–150 |
-| **A112511** | Largest n-bit number achieving A112509(n) | n = 1–150 |
-| **A156022** | Max distinct *positive* integers from n-bit substrings | n = 1–200 |
-| **A156023** | n(n+1)/2 − A112509(n) (the "missing" count) | n = 1–200 |
-| **A156024** | n(n+1)/2 − A156022(n) (missing positive count) | n = 1–200 |
-| **A156025** | Number of n-bit strings achieving A112509(n) | n = 1–150 |
+| Sequence | Description | Proven (a-file) | Best known (b-file) |
+| ---------- | ------------- | :-: | :-: |
+| **A112509** | Max distinct integers (including 0) from n-bit substrings | n = 1–111 | n = 1–200 |
+| **A112510** | Smallest n-bit number achieving A112509(n) | n = 1–111 | n = 1–150 |
+| **A112511** | Largest n-bit number achieving A112509(n) | n = 1–111 | n = 1–150 |
+| **A156022** | Max distinct *positive* integers from n-bit substrings | n = 1–111 | n = 1–200 |
+| **A156023** | n(n+1)/2 − A112509(n) (the "missing" count) | n = 1–111 | n = 1–200 |
+| **A156024** | n(n+1)/2 − A156022(n) (missing positive count) | n = 1–111 | n = 1–200 |
+| **A156025** | Number of n-bit strings achieving A112509(n) | n = 1–111 | n = 1–150 |
+
+The **a-files** (`data/oeis/a*.txt`) contain only rigorously proven values (Fuller n ≤ 80, branch-and-bound n = 81–111). The **b-files** (`data/oeis/b*.txt`) additionally include best-known heuristic values beyond the proven range. The b-file format permits best-known values.
 
 ## Key Findings
 
@@ -99,8 +101,8 @@ The computation at n = 2 × 10⁹ required scoring a two-billion-bit string (app
 For exact values up to n = 150, the ratios are:
 
 ```text
-n=100: a(100)=3936,  a(n)/n²=0.3936
-n=120: a(120)=5688,  a(n)/n²=0.3950
+n=100: a(100)=3875,  a(n)/n²=0.3875
+n=120: a(120)=5684,  a(n)/n²=0.3947
 n=150: a(150)=9070,  a(n)/n²=0.4031
 n=200: a(200)=16535, a(n)/n²=0.4134
 ```
@@ -145,34 +147,28 @@ pip install pydivsufsort
 
 ```text
 A112509/
-├── README.md                 ← you are here
-├── requirements.txt          ← Python dependencies
-├── config.py                 ← global configuration (paths, beam width, timeouts)
-├── compare_seeds.py          ← compare RLE structure of large-n seeds
-├── score_1B.py               ← compute a(n) lower bound for n = 1 billion
+├── README.md                     ← you are here
+├── requirements.txt              ← Python dependencies
+├── run_branch_bound.py           ← entry point: exact B&B solver
 │
 ├── src/
-│   ├── algorithms/           ← core search algorithms
-│   │   ├── brute_force.py        ← exact search for small n (≤ 25)
-│   │   ├── evaluate.py           ← O(n log²n) distinct-value counter
-│   │   ├── structured_search.py  ← block-template exhaustive search (n ≤ 150)
-│   │   ├── MH_algorithm.py       ← Metropolis-Hastings MCMC search (n ≤ 1000)
-│   │   ├── greedy_search.py      ← template-based greedy with learned prefixes
-│   │   ├── large_n_lower_bound.py← certified lower bounds for n ≥ 3,000
-│   │   └── surgical_nudge.py     ← LCP-targeted local refinement
+│   ├── algorithms/               ← core search algorithms
+│   │   ├── branch_bound_search.py    ← exact parallel B&B with SAM-based UB (~2900 lines)
+│   │   ├── brute_force.py            ← exact search for small n (≤ 25)
+│   │   ├── evaluate.py               ← O(n log²n) distinct-value counter
+│   │   ├── structured_search.py      ← block-template exhaustive search (n ≤ 150)
+│   │   ├── MH_algorithm.py           ← Metropolis-Hastings MCMC search (n ≤ 1000)
+│   │   ├── greedy_search.py          ← template-based greedy with learned prefixes
+│   │   ├── large_n_lower_bound.py    ← certified lower bounds for n ≥ 3,000
+│   │   └── surgical_nudge.py         ← LCP-targeted local refinement
 │   │
-│   └── tools/                ← analysis and utility scripts
+│   └── tools/                    ← analysis and utility scripts
 │       ├── generate_oeis_bfiles.py   ← export to OEIS b-file format
 │       ├── enhance_cached_results.py ← add derived sequences to cache
 │       ├── debruijn_analysis.py      ← de Bruijn embedding analysis
 │       ├── compute_hamming.py        ← pairwise Hamming distance stats
 │       ├── distribution.py           ← full distribution of b_n(S) for small n
-│       ├── benchmark_timing.py       ← MH convergence benchmarks
-│       ├── expand_mh_solutions.py    ← expand MH solutions via bit-swap search
-│       ├── add_common_sep_fields.py  ← extract common separator structure
-│       ├── analyse_common_structure.py ← run-length pattern analysis
-│       ├── mh_full_analyze.py        ← structural analysis of MH results
-│       └── run_mh.py                 ← parallel MH runner for multiple n
+│       └── ...
 │
 ├── config/
 │   ├── learned_bounds.json       ← structural constraints for block search
@@ -180,12 +176,13 @@ A112509/
 │
 ├── data/
 │   ├── cached_results.json       ← authoritative results (n = 1–150)
-│   ├── oeis/                     ← OEIS b-files for all 7 sequences
+│   ├── oeis/                     ← OEIS a-files (proven) and b-files (best known)
 │   └── reference/
-│       ├── known_values.py       ← OEIS reference values (n = 1–80)
+│       ├── known_values.py       ← proven exact values (n = 1–110)
 │       └── A156025_values.py     ← optimal string counts (n = 1–80)
 │
 ├── results/
+│   ├── branch_bound_exact/       ← proven B&B results (n = 5–111+)
 │   ├── mh_bounded/               ← constrained MH results (n = 81–200)
 │   ├── mh_unbounded/             ← unconstrained MH results (n ≥ 80)
 │   ├── large_n/                  ← lower bounds (n = 3K to 2B)
@@ -194,66 +191,221 @@ A112509/
 │   └── hamming_distances.json    ← Hamming distance statistics
 │
 ├── seeds/                        ← best-known bit-strings for large n
-│   ├── n_3000_seed.txt
-│   ├── n_2000000_seed.txt
-│   ├── n_10000000_seed.{npy,txt}
-│   ├── n_100000000_seed.npy
-│   ├── seed_n1000000000.npy
-│   └── seed_n2000000000.npy
+│
+├── paper/                        ← LaTeX: asymptotic proof & analysis
 │
 ├── notebooks/
 │   ├── A112509_Extended_Results.ipynb   ← tables, charts, structural analysis
-│   └── A112509_Results_Comparison.ipynb ← cross-method agreement for n=80–200
+│   └── A112509_Results_Comparison.ipynb ← cross-method agreement
 │
 └── tests/
-    └── test_debruijn_analysis.py
 ```
-
-## Project History and AI Assistance
-
-This project spanned several months of active research and consumed thousands of hours of CPU time across multiple machines. What began as a straightforward brute-force exploration of the sequence grew into a multi-layered computational investigation requiring increasingly sophisticated algorithms at each scale barrier.
-
-The work was carried out with substantial assistance from **Claude Sonnet 4.6** and **Claude Opus 4.6** (Anthropic). These AI systems contributed throughout the project with performance optimisation: identifying bottlenecks and profiling, and code implementation: writing, debugging and iterating on all major modules, test suites, and analysis tools.
-
-### Algorithm Evolution
-
-The pipeline was not designed upfront, it evolved iteratively as each approach hit its limits:
-
-1. **Brute force**: exhaustive enumeration of all 2^(n−1) strings worked to n ≈ 40 but was computationally intractable beyond that. Even here the scoring inner loop went through three rewrites: set comprehension → hash-set → early-exit integer comparisons.
-
-2. **Block-structure discovery**: manual inspection of brute-force solutions revealed the run-length pattern. This motivated a block-template search that reduced the search space by many orders of magnitude and extended exact results to n ≈ 60. The constraint windows were tightened iteratively by running the search, inspecting which block combinations ever appeared in any optimal solution, and narrowing the bounds accordingly.
-
-3. **Suffix-array scoring**: as n grew past 30, the O(n²) substring hash-set became the bottleneck. The key insight that distinct positive integer values equal distinct leading-1 suffixes in the suffix array, countable via the LCP array reduced scoring from O(n²) to O(n log n). Several implementations were benchmarked; the final version uses `pydivsufsort` (a C-wrapped libdivsufsort call) for SA construction and a Numba-JIT Kasai for LCP, achieving 10–50× speedup over pure Python.
-
-4. **Metropolis–Hastings MCMC**: to escape the constraint-design bottleneck and provide independent validation, an unconstrained MH search was built operating directly on run-length encodings. Five move types (transfer, split, merge, swap, multi-transfer) emerged through trial and error; the final set was chosen because it could reach any RLE representation from any starting point in a small number of moves. The cooling schedule went through ~8 iterations before the current geometric-with-reheating design proved reliable across all n ≤ 150. Crucially, unconstrained MH matched every exact result from the structured search, providing strong empirical certification.
-
-5. **Greedy and large-n seeding**: pushing to n in the thousands required a way to construct a good starting string without search. A greedy template approach was built using the observed linear scaling of block sizes. Counter-pattern seeds (inspired by de Bruijn sequence structure) were developed for n in the millions and above.
-
-6. **Surgical nudge**: at n ≥ 10⁶ even a single score evaluation dominates wall time, so random restarts become unaffordable. The surgical nudge replaced global random search with targeted local improvement: find the highest-LCP collision in the suffix array (the pair of substrings that waste the most coverage by being identical after leading-zero stripping), then make the smallest bit-swap capable of breaking it. This approach, parallelised across worker processes sharing a memory-mapped bit array, was the only method capable of making progress at n = 10⁸ and above.
-
-Thousands of hours of CPU time were consumed running the algorithms across extended overnight and multi-day runs.
 
 ---
 
-## Computational Methods (Summary)
+## Branch-and-Bound Exact Solver
 
-The pipeline moves through four stages of decreasing exactness and increasing scale:
+The branch-and-bound (B&B) solver is the primary tool for proving exact values of a(n). It exhaustively searches the space of all n-bit binary strings beginning with `1`, pruning branches whose upper bound cannot exceed the current best known value. The result is a mathematically rigorous proof that the returned value is optimal — not merely a heuristic estimate.
 
-### Scoring
+### Quick Start
+
+```bash
+# Prove a(n) and find all optimal strings:
+python run_branch_bound.py --n 112
+
+# Faster run without collecting all optimal strings:
+python run_branch_bound.py --n 112 --no-collect-all
+
+# Override worker count:
+python run_branch_bound.py --n 112 --workers 8
+```
+
+Results are saved to `results/branch_bound_exact/n_NNNN_results.json`.
+
+### Multi-Machine Sharding
+
+For very large n, the search can be distributed across multiple machines via filesystem-based sharding:
+
+```bash
+# Machine 1: enumerate tasks
+python run_branch_bound.py --n 120 --shard-mode coordinator
+
+# Machines 1–N: run workers (each claims tasks from shared directory)
+python run_branch_bound.py --n 120 --shard-mode worker --shard-dir /shared/path/
+
+# After all workers finish: merge results
+python run_branch_bound.py --n 120 --shard-mode merge --shard-dir /shared/path/
+```
+
+### Algorithm Overview
+
+The solver operates in three phases:
+
+```text
+Phase 1: BFS Split        Phase 2: Parallel DFS         Phase 2b: Tail Re-split
+┌──────────────────┐      ┌───────────────────────┐      ┌─────────────────────┐
+│ Expand root to   │      │ Workers claim subtrees │      │ When few tasks left,│
+│ depth d, prune   │─────▶│ from queue and run     │─────▶│ re-split remaining  │
+│ unpromising       │      │ iterative DFS with     │      │ tasks for load      │
+│ prefixes, split  │      │ SAM-based UB pruning   │      │ balancing            │
+│ hard subtrees    │      │ + shared incumbent     │      │                      │
+└──────────────────┘      └───────────────────────┘      └─────────────────────┘
+```
+
+#### Phase 1: BFS Enumeration and Task Creation
+
+Starting from the root prefix `(1,)`, BFS expands the search tree to a configurable split depth (auto-selected as approximately n/3, clamped to [10, 25]). At each level, children whose upper bound is below the current incumbent are pruned. The surviving leaf prefixes become independent DFS tasks.
+
+**Hard-subtree re-splitting:** Subtrees with upper bounds only slightly above the incumbent (within `hard_split_gap`, default 5) are classified as "hard" — they are unlikely to contain the optimum but cannot be pruned. These are expanded an additional `hard_split_extra` levels (default 7), breaking them into many fine-grained tasks that finish quickly and keep workers busy.
+
+**Probe-based adaptive splitting** (optional): A shallow DFS probe can be run on each subtree to classify it as easy or hard based on behavioral metrics (prune rate, residual stack size). Hard tasks get deeper re-splitting; all tasks are priority-ranked so the most promising subtrees execute first.
+
+#### Phase 2: Parallel DFS Workers
+
+Each task is an independent iterative DFS rooted at a BFS-frontier prefix. Workers run in parallel across all available CPU cores (default: `os.cpu_count() - 1`).
+
+**Worker architecture:**
+
+- Each worker uses an **explicit LIFO stack** (not a heap), giving O(n²) memory and no risk of OOM.
+- Stack entries store `(prefix_bits, precomputed_ub)` — the upper bound is computed once at push time and rechecked against the (monotonically rising) incumbent at pop time.
+- The entire DFS inner loop is compiled to native machine code via **Numba JIT** (`@njit(nogil=True, cache=True)`).
+- A **shuttle thread** bridges `multiprocessing.Value` ↔ `numpy.int64[1]` every 0.2 seconds, allowing the GIL-free Numba code to poll the cross-process shared incumbent without Python overhead.
+
+**Shared incumbent:** A single `multiprocessing.Value('l')` holds the best score found by any worker. When one worker finds a better solution, all other workers see the update within 0.2 seconds and can prune more aggressively. This is critical for `collect_all=True` mode where workers must know the exact optimum to decide which strings to keep.
+
+**Cooperative chunking** (optional): If `max_nodes_per_task > 0`, a DFS worker that exceeds its node budget snapshots its remaining stack and returns. The orchestrator re-enqueues the snapshot entries as fresh tasks, ensuring no single subtree monopolises a worker for hours.
+
+#### Phase 2b: Tail Re-split
+
+When the number of remaining tasks drops below a threshold (~10% of the original count), every queued task is BFS-expanded 3 additional levels. This breaks stragglers into fine-grained work to keep all cores busy through the long tail. Up to 5 rounds of re-splitting can occur.
+
+### Upper Bound Formula
+
+The upper bound is the heart of B&B pruning. For a prefix p of length k, extended by L lookahead bits to form q = p || e of length k + L, with m = n − k − L bits remaining:
+
+```text
+UB_L(p) = max over all e in {0,1}^L of [ score(q) + a(m) + ones(q) × m − SAM_savings ]
+```
+
+**Components:**
+
+| Term | Meaning |
+| --- | --- |
+| score(q) | Exact distinct-value count of the (k+L)-bit prefix q, computed via the suffix automaton |
+| a(m) | Proven exact value for an m-bit string (from `known_values.py` + B&B results). When unknown, falls back to the loose bound n(n+1)/2 − (k+L)(k+L+1)/2 |
+| ones(q) × m | Upper bound on cross-boundary values: each `1`-bit in q can contribute at most m new distinct values via substrings that start in q and extend into the unknown suffix |
+| SAM_savings | Cross-boundary values provably already present in the suffix automaton of q (see below) |
+
+**Additional tightening mechanisms:**
+
+- **Global UB cap**: a sequence-level upper bound derived from the maximum possible distinct values across all substring lengths.
+- **Parent-UB clamp**: `child_ub = min(child_ub, parent_ub)` — any descendant of a child is also a descendant of the parent, so the child's UB cannot exceed the parent's.
+- **Exact tail**: when m ≤ 8 remaining bits, all 2^m completions are scored exactly instead of using the UB estimate.
+- **Structural pruning**: prefixes containing ≥2 consecutive zeros after the leading 1-block are pruned (provably suboptimal for n ≥ 8).
+
+### Suffix Automaton (SAM) — Dual Role
+
+The suffix automaton is used in two distinct ways:
+
+#### 1. Exact Scoring
+
+For a complete n-bit string, the SAM is built online (one character at a time) and the distinct-value count is computed via a topological subtree-sum on the `1`-child of the root:
+
+```text
+f(s) = subtree_count(t1[root]) + 𝟙[0 ∈ s]
+```
+
+This counts all distinct substrings starting with `1` (each corresponding to a unique positive integer), plus 1 for the value 0 if any `0`-bit exists.
+
+#### 2. Upper Bound Computation (SAM Savings)
+
+When computing the UB for a prefix q, the SAM is used to tighten the cross-boundary estimate. For each `1`-bit at position i in q, the suffix starting there can produce substrings that extend into the unknown suffix. Some of these extensions are guaranteed to already exist in the SAM of q regardless of what the suffix contains:
+
+1. Walk the suffix-link chain to find the SAM state representing the suffix of q starting at position i.
+2. BFS from that state up to JMAX steps (2 for base UB, 3 for refined UB): check whether all 2^j possible j-step continuations exist as transitions in the SAM.
+3. Each fully covered step means one fewer new distinct value can be produced by extending into the suffix — subtract 1 from the cross-boundary budget.
+4. **Caching**: `state_cov[v]` memoises the coverage depth per SAM state within each extension evaluation, avoiding redundant BFS walks.
+
+The net effect is that the SAM savings term subtracts a provably correct amount from the naïve `ones(q) × m` cross-boundary estimate, making the UB significantly tighter. This is the key innovation that makes the B&B solver tractable for n > 80.
+
+### Lookahead
+
+The solver uses a multi-tier lookahead system:
+
+| Tier | When Used | Lookahead L | SAM JMAX |
+| --- | --- | --- | --- |
+| Base | Default UB | 2 | 2 |
+| Refined | Near-threshold: incumbent ≤ UB ≤ incumbent + margin | L + 1 | 3 |
+| Adaptive | Cascade: base first, refine only if UB is within margin of incumbent | 2 → 3 | 2 → 3 |
+
+**Base lookahead** (L = 2): enumerate all 2^L = 4 two-bit extensions of the prefix, build the SAM for each, compute the UB, and return the maximum. This is the default for every node.
+
+**Refined lookahead** (L = 3): used only when the base UB is tantalizingly close to the incumbent (within `refine_margin`, default 2). The extra lookahead bit and deeper SAM BFS (JMAX = 3 vs 2) often prove that the branch is actually suboptimal, saving the cost of exploring it. The dynamic margin widens near leaf depth to catch more near-misses.
+
+### Provability
+
+The B&B solver produces a mathematically rigorous proof that the returned a(n) is optimal:
+
+1. **Completeness**: every n-bit string beginning with `1` is either explicitly scored or its entire subtree is pruned by an upper bound that is provably ≥ the true maximum achievable by any string in that subtree.
+2. **UB correctness**: the upper bound formula uses only (a) exact scoring of known prefixes via the SAM, (b) proven values a(m) for smaller m, and (c) combinatorial arguments that overcount (never undercount) the number of new distinct values that the unknown suffix can add.
+3. **a(m) integrity**: the `known_values.py` file contains only values proven by either Fuller (n ≤ 80) or prior B&B runs. Heuristic values (from MH or structured search) are **never** used in the UB formula — using an underestimate of a(m) could cause incorrect pruning.
+4. **Incumbent seeding**: the initial lower bound is seeded from MH heuristic results when available (this is safe — it only makes pruning more aggressive, never causes incorrect pruning). If no heuristic is available, the search still finds the correct answer; it just explores more nodes.
+5. **`collect_all=True`**: when enabled, the solver continues searching even after finding the optimum, collecting every string that achieves it. The returned `num_optimal` count is exact (not a lower bound).
+
+### Result Format
+
+Each run saves a JSON file to `results/branch_bound_exact/`:
+
+```json
+{
+  "a(n)": 4826,
+  "num_optimal": 80,
+  "optimal_strings": ["1111111111111111111101111111111...", "..."],
+  "K_common": 10,
+  "common_seps": [1, 2, 1, 1, 1, 1, 1, 1, 1, 1],
+  "meta": {
+    "n": 111,
+    "preset": "stable",
+    "lookahead": 2,
+    "collect_all": true,
+    "resolved_workers": 15,
+    "nodes_expanded": 36956030926,
+    "nodes_pruned": 20451182412,
+    "num_subtrees": 2896,
+    "elapsed_s": 212429.27
+  }
+}
+```
+
+### Performance
+
+Representative timings on a 16-core machine (15 workers, `collect_all=True`, L=2):
+
+| n | a(n) | # optimal | Nodes expanded | Time |
+| --- | --- | --- | --- | --- |
+| 20 | 131 | 19 | 58 | 8 s |
+| 50 | 899 | — | ~10⁵ | ~30 s |
+| 80 | 2,423 | 10 | ~10⁷ | ~20 min |
+| 100 | 3,875 | 535 | ~10⁹ | ~12 h |
+| 111 | 4,826 | 80 | ~3.7×10¹⁰ | ~59 h |
+
+The node count grows roughly 3–5× per increment of n, so each additional value beyond n = 111 requires substantially more compute.
+
+---
+
+## Scoring
 
 All algorithms share the same inner loop. For small n (≲ 30) a brute-force hash-set over all O(n²) substrings is used. For larger n, the count is computed exactly in O(n log n) via the suffix-array/LCP identity.
 
-#### Suffix Array (SA)
+### Suffix Array (SA)
 
-The **suffix array** SA of a string s of length n is a permutation of {0, 1, ..., n−1} such that the suffixes s[SA[0]..], s[SA[1]..], ..., s[SA[n−1]..] are in lexicographic order. For example, if s = `1101` then the four suffixes in sorted order are `01`, `1`, `101`, `1101`, so SA = [2, 1, 3, 0] (0-indexed). The suffix array can be constructed in O(n) time using algorithm DC3/skew or the DivSufSort algorithm. This implementation uses `pydivsufsort`, a Python wrapper around the C library libdivsufsort, which achieves O(n) time with small constants.
+The **suffix array** SA of a string s of length n is a permutation of {0, 1, ..., n−1} such that the suffixes s[SA[0]..], s[SA[1]..], ..., s[SA[n−1]..] are in lexicographic order. This implementation uses `pydivsufsort`, a Python wrapper around the C library libdivsufsort, which achieves O(n) time with small constants.
 
-#### LCP Array and Kasai's Algorithm
+### LCP Array and Kasai's Algorithm
 
-The **LCP array** LCP has LCP[i] = length of the longest common prefix between the suffixes at consecutive SA positions, i.e. between s[SA[i−1]..] and s[SA[i]..], with LCP[0] = 0 by convention. For the example above, the consecutive suffix pairs share prefixes of lengths 0, 1, 1, so LCP = [0, 0, 1, 1].
+The **LCP array** LCP has LCP[i] = length of the longest common prefix between the suffixes at consecutive SA positions. **Kasai's algorithm** computes the full LCP array in O(n) time and O(n) space from the suffix array. In this codebase Kasai's algorithm is compiled to native machine code with Numba's JIT compiler, giving a further 10–50× speedup over a pure Python implementation.
 
-**Kasai's algorithm** computes the full LCP array in O(n) time and O(n) space from the suffix array using the following key property: if the suffix starting at position i has LCP value h with its predecessor in the sorted order, then the suffix starting at i+1 has LCP value at least h−1 with its own predecessor. This allows the algorithm to compute all LCP values in a single left-to-right scan over the original string, amortising the cost so that each character is examined at most twice overall. In this codebase Kasai's algorithm is compiled to native machine code with Numba's JIT compiler, giving a further 10–50× speedup over a pure Python implementation.
-
-#### The Scoring Identity
+### The Scoring Identity
 
 The key observation is that two substrings represent the same non-negative integer if and only if they are identical after stripping leading zeros. It follows that:
 
@@ -261,67 +413,31 @@ The key observation is that two substrings represent the same non-negative integ
 distinct values = (1 if any 0-bit present) + (# distinct substrings starting with '1')
 ```
 
-The second term counts distinct leading-1 substrings. Since every leading-1 substring is a prefix of some leading-1 suffix, and the suffix array lists all suffixes in sorted order, the number of distinct leading-1 substrings can be read off from the LCP array: each leading-1 suffix at SA position i contributes `(n − SA[i])` substrings, of which `LCP[i]` are already counted by the preceding suffix (they share a common prefix of that length). Summing only over positions where the suffix starts with `1`:
+Summing only over positions where the suffix starts with `1`:
 
 ```text
 f(s) = Σ_{i: s[SA[i]] = '1'}  (n − SA[i] − LCP[i])  +  𝟙[0 ∈ s]
 ```
 
-where LCP[0] = 0 by convention and 𝟙[0 ∈ s] is 1 if s contains any `0` bit, 0 otherwise. Each term `(n − SA[i] − LCP[i])` counts the substrings that begin at SA[i], start with `1`, and are not a prefix of the lexicographically preceding leading-1 suffix. The entire computation runs in O(n) time once the SA and LCP arrays are available, making the full scoring pipeline O(n log n) (dominated by SA construction, or O(n) with DivSufSort).
-
-### Structured search (exact, n ≤ 150)
-
-Early brute-force runs revealed a universal structural template: every optimal n-bit string takes the form of a long leading block of 1s, followed by alternating 0-separator blocks and 1-blocks of strictly decreasing length. The zero-separator sequence always begins `[1, 2, 1, ...]` and the shared prefix length (K_common) grows with n: approximately 3 at n = 30, 8 at n = 81–103, and 14 at n = 150.
-
-This structure reduces the search to enumerating integer block-size tuples within tight windows. The windows were discovered based on previous optimal values of n and how the strucutre evolves. The final constraints (stored in `config/learned_bounds.json`) reduce the search space by large amounts relative to unconstrained enumeration, making exact results tractable to n = 150 (and beyond) on a modern multi-core CPU.
-
-Results for n ≤ 80 are cross-validated against Fuller's OEIS values; n = 81–150 are certified by the agreement of two independent methods: structured search and unconstrained MH.
-
-### Metropolis–Hastings (heuristic, n ≤ ~1000)
-
-The MH algorithm operates on run-length encodings rather than raw bit strings, representing each candidate as a sequence of alternating block lengths `(b₁, z₁, b₂, z₂, ..., bₖ)` where bᵢ are 1-block lengths and zᵢ are 0-block lengths. This representation makes the five move types natural:
-
-- **Transfer**: move one bit from one block to an adjacent block (most frequent)
-- **Split**: divide a block into two by inserting a new separator
-- **Merge**: join two adjacent same-type blocks by removing a separator
-- **Swap**: exchange the lengths of two blocks
-- **Multi-transfer**: transfer several bits at once for larger steps
-
-The temperature follows a geometric cooling schedule with periodic reheating to escape local optima. Despite having no structural priors, unconstrained MH reliably recovers the true optimum for all n ≤ 150 (often in minutes and even seconds for small n), confirming that the block template is a natural attractor of the score landscape rather than an artificially imposed constraint. For n ≤ 150, independent MH runs from random initial strings converge to the same best value as exhaustive structured search, providing strong empirical certification.  Morevoer this could be adopted for n>150 top find the optimal value for a given n (what it does not guarantee is finding all optimal solutions but it appears to come very close, for this reasons optimal solutions beyond 150 have not been submitted, just the optimal value).
-
-### Surgical nudge (certified lower bounds, n up to 2 × 10⁹)
-
-For large, even a single suffix-array score evaluation takes tens of seconds, making random restarts infeasible. The surgical nudge instead maintains a single incumbent string and makes targeted local improvements guided by the suffix array structure itself.
-
-At each step the algorithm identifies the highest-LCP collision: the pair of adjacent suffixes in sorted order with the largest LCP value. This pair represents the most costly duplication: two long substrings that happen to be identical, each wasting LCP positions that could contribute new distinct values. A small neighbourhood of bit positions around the collision point is then searched for a density-preserving swap (flip a 0→1 and a 1→0 simultaneously, preserving the total number of 1-bits) that breaks the collision.
-
-Candidate swaps are evaluated in parallel across a worker process pool sharing a memory-mapped copy of the incumbent bit array. Because every accepted swap strictly increases the exact score, the final value is a rigorous certified lower bound. At n = 2 × 10⁹ a lower bound a(n)/n² ≥ 0.49996 was found, consistent with the proved limit of exactly 1/2.
+Each term `(n − SA[i] − LCP[i])` counts the substrings that begin at SA[i], start with `1`, and are not a prefix of the lexicographically preceding leading-1 suffix. The entire computation runs in O(n) time once the SA and LCP arrays are available, making the full scoring pipeline O(n log n).
 
 ---
 
-## Algorithms
-
-> **Note on configuration**: Most algorithms are configured by editing the `main()` function at the bottom of the script; look for the **USER CONFIGURATION** section. This is deliberate: research scripts with many interrelated parameters (block constraints, density bounds, annealing schedules) are easier to manage as editable config blocks than as dozens of CLI flags. The brute_force and evaluate scripts are the exceptions, accepting command-line arguments.
+## Other Algorithms
 
 ### 1. Brute Force (`src/algorithms/brute_force.py`)
 
 Exhaustive enumeration of all 2^(n−1) candidate n-bit strings (leading bit is always 1). For each string, computes the set of distinct integer values from all O(n²) substrings.
 
-**Use for**: n ≤ 20 (exact, complete enumeration, large n can be used but it is slow).
+**Use for**: n ≤ 20 (exact, complete enumeration).
 
 ```bash
 python -m src.algorithms.brute_force
 ```
 
-Prints a table of a(n) for n = 1–20, validated against known OEIS values.
-
 ### 2. Evaluate (`src/algorithms/evaluate.py`)
 
-Counts distinct substring values for a single bit-string using a suffix-array approach in O(n log² n). Key insight: two substrings have the same integer value if and only if they are identical after stripping leading zeros. So:
-
-> distinct values = (1 if any 0-bit exists) + (number of distinct substrings starting with 1)
-
-The second term is computed exactly using suffix arrays + Kasai's LCP algorithm.
+Counts distinct substring values for a single bit-string using a suffix-array approach.
 
 ```bash
 # Score a specific bit-string
@@ -329,192 +445,49 @@ python -m src.algorithms.evaluate 11111101111111001111101011110110
 
 # Pipe from stdin
 echo 1101 | python -m src.algorithms.evaluate
-
-# Interactive prompt
-python -m src.algorithms.evaluate
 ```
 
 ### 3. Structured Search (`src/algorithms/structured_search.py`)
 
 **Use for**: n ≤ 150 (exact, certified results).
 
-#### Structural constraints as a search oracle
-
-Analysing previously known optimal strings for n ≤ 80 reveals a universal structural template: the zero-separator sequence stabilises to `(1, 2, 1, 1, 1, 1, 1, 1)` for n ≥ 80 (with the shared prefix growing further as n increases), and the one-block lengths follow a predominantly decreasing pattern with characteristic small interspersed blocks.
-
-Block-size bounds [b_i_min(n), b_i_max(n)] for each block index i are established by manual inspection of the optimal strings for nearby values of n. For a new target n, the previous few optimal strings (for n−1, n−2, ...) are examined to identify the range within which each block length has moved; a small additional tolerance is added on each side to ensure no valid candidate is excluded. The bounds are also cross-checked against the best solutions found by the unconstrained MH algorithm, which provides an independent estimate of plausible block sizes. The resulting window width b_i_max − b_i_min is typically 3–8 for the dominant blocks, tight enough to make enumeration feasible.
-
-#### The search procedure
-
-Given the manually determined bounds for a target n, the algorithm proceeds as follows:
-
-1. **Fix the separator template.** The zero-block lengths are set to `(1, 2, 1, 1, 1, 1, 1, 1, ...)`. This is treated as a hard constraint.
-
-2. **Enumerate block-size tuples.** Iterate over all integer tuples (b_1, b_2, ..., b_K) with b_i in [b_i_min, b_i_max] and sum(b_i) + sum(c_i) = n. The product of window widths is the search space size; for n ≤ 150 this is comfortably below 10^6 configurations.
-
-3. **Evaluate.** For each tuple, assemble the n-bit string from the RLE and compute f(s) using the suffix-array kernel. Evaluation is parallelised across all available CPU cores with a process pool.
-
-4. **Record the optimum.** The maximum f(s) found is reported as a(n), and all strings achieving it are stored.
-
-#### Why it works
-
-The approach is correct (not merely heuristic) for n ≤ 150 because:
-
-- For n ≤ 80, all results are cross-validated against Fuller's independently computed values.
-- For 81 ≤ n ≤ 150, an independent MH search consistently finds the same best value when run from a random initialisation with no structural constraints. Agreement across more than 10 independent restarts for all these values of n certifies that the structured search is not missing any region of the optimum.  Moreover the patterns in the a(n) continue to be seen.
-- Analytically, the constraints are necessary conditions: every optimal string for n ≤ 80 satisfies them. An optimal string outside the template would represent a new structural regime; the MH search is specifically designed to detect this if it occurs.
-
-**To run:** edit the **USER CONFIGURATION** section in `main()`:
-
-```python
-n_start = 1                # first n to compute
-n_end   = 30               # last n to compute
-force_recompute = False    # True = ignore cache and recompute all
-```
+Exploits the observed structural template: all optimal strings have the form of a long leading 1-block followed by alternating 0-separator blocks and decreasing 1-blocks. Block-size bounds are manually determined from previously known optimal strings, reducing the search to enumerating integer tuples within tight windows. Results for n ≤ 80 are cross-validated against Fuller's OEIS values; n = 81–150 are certified by agreement with unconstrained MH.
 
 ```bash
 python -m src.algorithms.structured_search
 ```
 
-Results are automatically saved to `data/cached_results.json`. Already-computed values are skipped unless `force_recompute` is set. CLI overrides are also accepted (e.g. `structured_search 80 100 --force`).
-
 ### 4. Metropolis-Hastings MCMC (`src/algorithms/MH_algorithm.py`)
 
-**Use for**: n = 1–~1000 (heuristic; reliably finds the true optimum for all n ≤ 150 in unconstrained mode).
+**Use for**: n = 1–~1000 (heuristic; reliably finds the true optimum for all n ≤ 150).
 
-#### Representation
-
-The MH algorithm works directly with the run-length encoding (RLE) of binary strings. An RLE is an integer list [b_1, c_1, b_2, c_2, ...] where the b_i are lengths of consecutive 1-blocks and the c_i are lengths of 0-blocks. For example, `11100110` is encoded as [3, 2, 2, 1]. Every valid n-bit string beginning with `1` (a necessary condition for maximality for n ≥ 2) is uniquely described by such a list.
-
-Working in RLE space reduces the effective dimensionality of the search from n bits to K ≈ 10–20 run lengths for the values of n considered, and makes it natural to propose structured moves that preserve validity.
-
-#### Proposed moves
-
-At each iteration the algorithm selects one of five move types:
-
-1. **Transfer.** Move 1–3 bits between adjacent runs: [..., b, c, ...] → [..., b−t, c+t, ...] for a uniformly random transfer amount t ∈ {1, 2, 3} capped at b−1. Preserves the total number of bits n.
-
-2. **Split.** Divide one run into three by inserting a new separator: [..., b, ...] → [..., b_1, 1, b_2, ...] with b_1 + 1 + b_2 = b. Increases the number of blocks by 2.
-
-3. **Merge.** Remove a separator and fuse the two flanking runs of the same type: [..., b_1, c, b_2, ...] → [..., b_1 + c + b_2, ...]. Decreases the number of blocks by 2.
-
-4. **Swap.** Exchange the lengths of two non-adjacent runs of the same type (both 1-runs or both 0-runs): [..., b_i, ..., b_j, ...] → [..., b_j, ..., b_i, ...]. Preserves n and the number of blocks.
-
-5. **Multi-transfer.** Simultaneously transfer bits between two non-adjacent pairs of runs, and with probability 5% apply a double-pair cross-swap that adjusts four runs at once. This extra move is crucial for crossing connectivity gaps in the optimisation landscape where no single-run change improves the score.
-
-The probabilities of these moves are not uniform: they vary with the search phase. In the early phase (0–30% of iterations), structural moves (split, merge) receive higher weight to explore diverse block topologies. In the late phase (70–100%), fine-grained transfer moves are favoured.
-
-#### Acceptance rule and temperature schedule
-
-The algorithm uses the standard Metropolis criterion. Let v_old and v_new = f(s_new) be the current and proposed scores. The proposed move is accepted with probability min(1, exp((v_new − v_old) / T)), where T is a temperature parameter that decays geometrically: T_{k+1} = γ · T_k with γ ≈ 0.9995 (the cooling rate). Improvements are always accepted. Worsening moves are accepted with a probability that decreases as the search progresses and T → 0, allowing escape from local optima early in the search while concentrating on local refinement late.
-
-Periodic reheating (resetting T to a fraction of its initial value) prevents premature convergence when the chain has been non-improving for many iterations.
-
-#### Constrained and unconstrained modes
-
-**Constrained mode.** Block-size bounds and the separator template from the structured search are enforced during move proposal. If a proposed move would violate any constraint (e.g. push a block below b_i_min), the proposal is rejected outright before evaluation. This dramatically reduces wasted evaluations and speeds convergence.
-
-**Unconstrained mode.** No structural priors are imposed. The algorithm starts from a random RLE (or a previous best) and explores the full space of binary strings. Despite the much larger search space, unconstrained mode reliably finds the optimal a(n) value for n ≤ 150 in a few thousand iterations per restart.
-
-> **Key observation.** For every n ≤ 150, at least one of 10 independent unconstrained restarts (each using 5 × 10^4 iterations and random initialisation) returns a solution achieving a(n). The typical time to first reach the optimum is O(10^3) iterations, far fewer than the full budget.
-
-This observation is striking: even without knowing the separator template or block-size bounds, the MH algorithm discovers the correct structure automatically. It provides independent probabilistic certification of the structured search results and suggests that the (1, 2, 1, 1, ...) separator pattern is a deep attractor in the optimisation landscape, not an artefact of the search constraints.
-
-#### Multi-restart parallelism
-
-Multiple independent MH chains run in parallel, one per CPU core. Each restart uses a fresh random initialisation and slightly varied hyperparameters (initial temperature, cooling rate, iteration budget). The global best solution is tracked across all restarts. This embarrassingly parallel architecture provides both speed and robustness: if one chain converges prematurely to a sub-optimal local maximum, others are likely to find the global optimum.
-
-**To run:** edit the configuration section at the top of `main()`, then:
+Operates on run-length encodings with five move types (transfer, split, merge, swap, multi-transfer). Geometric cooling with periodic reheating. Despite having no structural priors, unconstrained MH reliably recovers the true optimum for all n ≤ 150, confirming that the block template is a natural attractor of the score landscape.
 
 ```bash
 python -m src.algorithms.MH_algorithm
 ```
 
-Key settings to edit in `main()`:
-
-```python
-n = 194                        # bit-string length to optimise
-num_restarts = 15_000          # Ctrl+C at any time; partial results are saved
-iterations_per_run = 100_000   # iterations per restart
-num_processes = None           # None = use all cores
-
-# Optional structural constraints (None = unconstrained)
-min_ones = None                # e.g. [18, 12, 10, 5] for first 4 one-blocks
-max_ones = [None]*4
-min_zeros = None               # e.g. [1, 1, 0, 0] for first 4 zero-blocks
-max_zeros = [None]*4
-min_density = None             # e.g. 0.75
-max_density = None             # e.g. 0.88
-
-# Post-search solution expansion
-run_level_set_walk = True      # find more solutions at the best value found
-```
-
-Results are saved to `results/mh_unbounded/n_XXXX_results.json` (this can be changed). Press Ctrl+C at any time; progress is saved automatically.
-
 ### 5. Greedy Search (`src/algorithms/greedy_search.py`)
 
-Template-based construction exploiting the discovered linear scaling pattern:
-
-- Zero-separator prefix begins `[1, 2, 1, ...]` and grows with n
-- Block sizes scale approximately linearly with n
-- The algorithm fixes the prefix structure, estimates block sizes, and greedily optimizes the tail
-
-**Use for**: fast initial lower bound solutions for any n
-
-**To run**: edit the configuration in `main()`, then:
+Template-based construction exploiting the linear scaling pattern. Fast initial lower bound for any n.
 
 ```bash
 python -m src.algorithms.greedy_search
 ```
 
-Key settings:
-
-```python
-n = 20000                              # target bit-string length
-local_search_iterations = 5_000_000    # local improvement steps
-max_seconds_per_restart = 18000        # time budget per restart (seconds)
-seed_solution = None                   # None = auto-load best from results/
-```
-
 ### 6. Large-n Lower Bound (`src/algorithms/large_n_lower_bound.py`)
 
-Computes mathematically valid lower bounds for n ≥ 3,000 by counting only a chosen subset of substrings exactly (any subset gives a valid lower bound). Uses:
-
-- Pattern-based seed construction (counter-pattern similar to de Bruijn sequences)
-- Full or strided sampling strategies
-- Suffix array + LCP scoring for exact subset counting
-
-**Use for**: n = 3,000 to 2,000,000,000+
-
-This module is primarily used as a library by other scripts (e.g. `score_1B.py`). See `score_1B.py` for an example of scoring a billion-bit string.
+Computes mathematically valid lower bounds for n ≥ 3,000 by counting only a chosen subset of substrings exactly. Used as a library by other scripts (e.g. `score_1B.py`).
 
 ### 7. Surgical Nudge (`src/algorithms/surgical_nudge.py`)
 
-Local refinement starting from a known good seed. Identifies the highest-LCP collision in the suffix array (the "worst" duplicate substring) and makes the smallest bit-swap to break it. Features:
-
-- LCP-targeted collision breaking
-- Density-preserving swaps (flip a 0→1 and a 1→0 simultaneously)
-- Random restart with perturbation kicks
-- Multi-swap exploration
-
-**Use for**: polishing large-n seeds to get an improved lower bound after initial construction
-
-**To run**: edit the configuration in `main()`, then:
+Local refinement starting from a known good seed. Identifies the highest-LCP collision in the suffix array and makes the smallest density-preserving bit-swap to break it. The only method capable of making progress at n ≥ 10⁸.
 
 ```bash
 python -m src.algorithms.surgical_nudge
 ```
 
-Key settings:
-
-```python
-n = 100_000_000       # must match a seed file in seeds/
-max_seconds = 36000   # wall-clock budget (seconds)
-num_workers = 14      # parallel suffix-array evaluations
-```
-
-Expects a seed file in `seeds/` (e.g. `n_100000000_seed.npy`). Results are saved to `results/large_n/`.
+---
 
 ## Tools
 
@@ -525,10 +498,6 @@ Expects a seed file in `seeds/` (e.g. `n_100000000_seed.npy`). Results are saved
 | `debruijn_analysis.py` | Compute minimum de Bruijn embedding order for each optimal string |
 | `compute_hamming.py` | Compute min/max/mean pairwise Hamming distances between optimal solutions |
 | `distribution.py` | Full distribution of distinct-value counts across all 2^n strings |
-| `benchmark_timing.py` | Benchmark MH convergence speed per n |
-| `expand_mh_solutions.py` | Expand MH solution sets via exhaustive 1-hop bit-swap neighbourhood search |
-| `add_common_sep_fields.py` | Extract common separator structure (K_common, common_seps) |
-| `run_mh.py` | Run MH in parallel for multiple n values |
 
 Run any tool with:
 
@@ -556,97 +525,59 @@ Cross-validates three independent methods for n = 80–200:
 - Bounded (constrained) Metropolis-Hastings
 - Exhaustive block-template search
 
-Shows value agreement, solution count coverage, and flags any mismatches.
-
 ## Data Files
-
-### `data/cached_results.json`
-
-Authoritative results for n = 1–150. Each entry contains:
-
-```json
-{
-  "42": {
-    "a(n)": 622,
-    "num_optimal": 36,
-    "optimal_strings": ["111111111110111111111100...", ...],
-    "A112510_min_decimal": 4393508438016,
-    "A112511_max_decimal": 4398004084736,
-    "A156022_positive_only": 621,
-    "A156023_complement": 281,
-    "A156024_complement_positive": 282,
-    "K_common": 8,
-    "common_seps": [1, 2, 1, 1, 1, 1, 1, 1]
-  }
-}
-```
-
-### `results/mh_unbounded/`
-
-Unconstrained MH results (no block or density constraints) for n ≥ 80. Used as a cross-check: if unbounded and bounded MH agree on `best_value`, it strongly supports that value being the true optimum.
-
-```json
-{
-  "n": 151,
-  "best_value": 9197,
-  "solutions": ["11111111111...", ...],
-  "last_updated": "...",
-  "metadata": {...}
-}
-```
-
-### `results/mh_bounded/`
-
-MH results with structural constraints (block ranges derived from `config/search_constraints.json`, with loose bounds) for n = 81–200. The constraints reduce the search space, allowing more restarts to focus on the most promising region. Same format as `mh_unbounded/` above.
-
-### `results/large_n/`
-
-Lower-bound computations for a selection of n = 3,000 up to 2 billion:
-
-```json
-{
-  "n": 1000000000,
-  "score": 499943911277037650,
-  "a_over_n_sq": 0.49994391127703763,
-  "method": "counter-pattern seed (no optimization)"
-}
-```
 
 ### `data/oeis/`
 
-OEIS-formatted b-files (`n a(n)` pairs) for submission/reference:
+Two classes of OEIS-formatted data files:
 
-- `b112509.txt` (n = 1–200)
-- `b112510.txt` (n = 1–150)
-- `b112511.txt` (n = 1–150)
-- `b156022.txt` (n = 1–200)
-- `b156023.txt` (n = 1–200)
-- `b156024.txt` (n = 1–200)
-- `b156025.txt` (n = 1–150)
+- **a-files** (`a*.txt`): contain only rigorously proven values (Fuller n ≤ 80, branch-and-bound n = 81–111). Suitable for OEIS submission.
+- **b-files** (`b*.txt`): contain best-known values including heuristic estimates beyond the proven range. The b-file format permits best-known values.
+
+### `results/branch_bound_exact/`
+
+Proven B&B results for individual values of n. Each file contains `a(n)`, all optimal strings, structural metadata (`K_common`, `common_seps`), and solver statistics (nodes expanded, elapsed time, etc.).
+
+### `data/cached_results.json`
+
+Authoritative results for n = 1–150, including structural metadata and all optimal strings.
+
+### `data/reference/known_values.py`
+
+Proven exact values used by the B&B solver's upper bound formula. Contains only values proven by Fuller (n ≤ 80) or prior B&B runs (n = 81–110). **Never** includes heuristic values — using an underestimate of a(m) in the UB formula could cause incorrect pruning.
 
 ## Configuration
 
 ### `config/learned_bounds.json`
 
-Structural constraints discovered from analysing optimal solutions, used by `structured_search.py`:
-
-- **K_common**: the number of leading zero-separators shared by all optimal solutions for the target n (e.g. 8 for n = 99)
-- **common_seps**: the corresponding shared separator values (e.g. `[1, 2, 1, 1, 1, 1, 1, 1]` for n = 99); both grow with n
-- **block_ranges**: `[min, max]` for each 1-block position
-- **density bounds**: min/max 1-bit density
+Structural constraints discovered from analysing optimal solutions, used by `structured_search.py`.
 
 ### `config/search_constraints.json`
 
-Per-n structural constraints for n ≥ 81, used by the bounded MH algorithm. Includes tailored block ranges, density bounds, and separator constraints per value of n.
+Per-n structural constraints for n ≥ 81, used by the bounded MH algorithm.
 
 ## Typical Workflows
 
-### Compute exact values for a new n
+### Prove the next exact value
 
-1. Ensure `config/learned_bounds.json` has appropriate constraints
-2. Run `structured_search.py` for the target n range
-3. Run `enhance_cached_results.py` to add derived sequences
-4. Run `generate_oeis_bfiles.py` to update b-files
+```bash
+# Run branch-and-bound for n = 112
+python run_branch_bound.py --n 112
+
+# Results saved to results/branch_bound_exact/n_0112_results.json
+```
+
+The solver automatically loads all previously proven values from `known_values.py` and `results/branch_bound_exact/` to use in its upper bound formula. Each new proven value strengthens the UB for subsequent runs.
+
+### Chain multiple values
+
+Run values sequentially:
+
+```bash
+python run_branch_bound.py --n 112
+python run_branch_bound.py --n 113
+python run_branch_bound.py --n 114
+```
 
 ### Explore a new large n
 
@@ -654,10 +585,10 @@ Per-n structural constraints for n ≥ 81, used by the bounded MH algorithm. Inc
 2. Refine with `surgical_nudge.py`
 3. Score the final string with `evaluate.py`
 
-### Validate MH results against exhaustive search
+### Validate MH results against exact search
 
 1. Run MH (bounded and/or unbounded) for the target n
-2. Run exhaustive `structured_search.py` if feasible
+2. Run branch-and-bound or exhaustive `structured_search.py` if feasible
 3. Compare in `A112509_Results_Comparison.ipynb`
 
 ## Second Differences
@@ -729,7 +660,7 @@ Note: Δ²a(n) ∈ {0, 1} throughout this range.
 
 ### Table 2: a(n) and Δ²a(n) for n = 51 to 200
 
-Bold entries mark occurrences of Δ²a(n) = 2. Values for n ≤ 150 are exact from exhaustive search; n = 151–200 are exact values from independent MH runs (certified by multi-restart agreement).
+Bold entries mark occurrences of Δ²a(n) = 2. Values for n ≤ 111 are exact from branch-and-bound; n = 112–150 are exact from exhaustive structured search (certified by MH agreement); n = 151–200 are best-known values from independent MH runs.
 
 | n | a(n) | Δ²a | n | a(n) | Δ²a | n | a(n) | Δ²a | n | a(n) | Δ²a |
 | --: | -----: | ----: | --: | -----: | ----: | --: | -----: | ----: | --: | -----: | ----: |
@@ -782,11 +713,35 @@ The following open problems are suggested by the computational findings.
 
 **(iii) Second differences.** Prove that Δ²a(n) ∈ {0, 1, 2} for all n. This would require understanding the growth rate of Δa(n) with precision.
 
-**(iv) Exact values.** Extend the exhaustive search computation beyond n = 150. Each additional value requires a substantial increase in the search budget; reaching n = 200 exactly appears to require many CPU-hours with the current structured-search method.
+**(iv) Exact values.** Extend the branch-and-bound computation beyond n = 111. Each additional value requires a substantial increase in the search budget; reaching n = 150 by B&B appears to require many CPU-months with the current solver. Multi-machine sharding may make this tractable.
 
-**(v) One-bit density.** It is now proved that every optimal string has ones-density 1 − O(n^{−1/4}) (Clare, 2026). The bound follows from combining the quantitative lower bound on a(n) with the zero-count penalty. The empirical rate at large n is far tighter: the best-known seeds have density 0.999950 at n = 10⁹ and 0.999964 at n = 2 × 10⁹, suggesting the true rate is 1 − O(n^{−1}) or faster. Proving this sharper rate remains open.
+**(v) One-bit density.** It is now proved that every optimal string has ones-density 1 − O(n^{−1/4}) (Clare, 2026). The empirical rate at large n is far tighter: the best-known seeds have density 0.999950 at n = 10⁹ and 0.999964 at n = 2 × 10⁹, suggesting the true rate is 1 − O(n^{−1}) or faster. Proving this sharper rate remains open.
 
 **(vi) Alphabet generalisation.** What is the analogous sequence for ternary (base-3) or higher-base alphabets? Does the ratio a_q(n)/n² for base q approach (q−1)/2 or some other constant?
+
+## Project History and AI Assistance
+
+This project spanned several months of active research and consumed thousands of hours of CPU time across multiple machines. What began as a straightforward brute-force exploration of the sequence grew into a multi-layered computational investigation requiring increasingly sophisticated algorithms at each scale barrier.
+
+The work was carried out with substantial assistance from **Claude Sonnet 4.6** and **Claude Opus 4.6** (Anthropic). These AI systems contributed throughout the project with performance optimisation: identifying bottlenecks and profiling, and code implementation: writing, debugging and iterating on all major modules, test suites, and analysis tools.
+
+### Algorithm Evolution
+
+The pipeline was not designed upfront, it evolved iteratively as each approach hit its limits:
+
+1. **Brute force**: exhaustive enumeration of all 2^(n−1) strings worked to n ≈ 40 but was computationally intractable beyond that.
+
+2. **Block-structure discovery**: manual inspection of brute-force solutions revealed the run-length pattern. This motivated a block-template search that extended exact results to n ≈ 60.
+
+3. **Suffix-array scoring**: as n grew past 30, the O(n²) substring hash-set became the bottleneck. The key insight that distinct positive integer values equal distinct leading-1 suffixes in the suffix array, countable via the LCP array, reduced scoring from O(n²) to O(n log n).
+
+4. **Metropolis–Hastings MCMC**: to escape the constraint-design bottleneck and provide independent validation, an unconstrained MH search was built operating directly on run-length encodings. Five move types (transfer, split, merge, swap, multi-transfer) ensure ergodicity.
+
+5. **Greedy and large-n seeding**: pushing to n in the thousands required template-based greedy construction using the observed linear scaling of block sizes.
+
+6. **Surgical nudge**: at n ≥ 10⁶, targeted local improvement guided by the suffix array structure — the only method capable of making progress at n = 10⁸ and above.
+
+7. **Branch-and-bound**: the definitive exact solver. Parallel DFS with SAM-based upper-bound pruning, Numba-JIT inner loops, shared-incumbent propagation, and adaptive work-splitting. Extended proven values from n = 80 to n = 111 (and counting).
 
 ## Licence
 

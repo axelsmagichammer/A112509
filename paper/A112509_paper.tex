@@ -1,0 +1,1696 @@
+\documentclass[11pt,a4paper]{article}
+
+% -----------------------------------------------------------------------
+% Packages
+% -----------------------------------------------------------------------
+\usepackage{amsmath,amsthm,amssymb,mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{xcolor}
+
+\geometry{margin=1in}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  citecolor=blue!70!black,
+  urlcolor=blue!70!black,
+}
+
+% -----------------------------------------------------------------------
+% Theorem environments
+% -----------------------------------------------------------------------
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+% -----------------------------------------------------------------------
+% Macros
+% -----------------------------------------------------------------------
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
+\newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
+\newcommand{\val}{\nu}
+\newcommand{\ones}{N_1}
+\newcommand{\zeros}{N_0}
+\newcommand{\Da}{\Delta a}
+\newcommand{\DDa}{\Delta^2 a}
+
+% -----------------------------------------------------------------------
+% Title
+% -----------------------------------------------------------------------
+\title{On the maximum number of distinct integers\\
+       representable by substrings of a binary string}
+
+\author{Ben Clare}
+\date{\today}
+
+% =======================================================================
+\begin{document}
+% =======================================================================
+
+\maketitle
+
+% -----------------------------------------------------------------------
+\begin{abstract}
+% -----------------------------------------------------------------------
+For a binary string $s$ of length~$n$, let $f(s)$ denote the number of
+distinct non-negative integers whose binary representations appear as
+contiguous substrings of~$s$ (leading zeros suppressed), and set
+$a(n) = \max_{|s|=n} f(s)$.  This is OEIS sequence A112509.
+
+We prove that
+$\lim_{n\to\infty} a(n)/n^2 = \frac{1}{2}$; more precisely, for all
+$n \ge 36$,
+\[
+  \tfrac{1}{2}\,n^2 - \tfrac{13}{4}\,n^{3/2}
+  \;\le\; a(n)
+  \;\le\; \tfrac{n(n+1)}{2},
+\]
+so $a(n)/n^2 = \frac{1}{2} + O(n^{-1/2})$.
+We also construct explicit near-optimal strings of ones-density
+$1-O(n^{-1/2})$ and prove that every optimal string has ones-density
+$1-O(n^{-1/4})$.
+The sequence is convex:
+$a(n{+}1) - 2a(n) + a(n{-}1) \ge 0$ for all $n \ge 2$, and its second
+differences satisfy $\Delta^2 a(n)=O(n^{3/4})$.
+Finally, we prove that any two consecutive zero-separators of equal
+length force
+$\Theta(\min(b_i,b_{i+1})\cdot \min(b_{i+1},b_{i+2}))$ duplicate
+substring values, giving a quantitative obstruction to repeated
+adjacent separator lengths.
+
+A branch-and-bound algorithm founded on these bounds extends the
+certified table from Fuller's A$^*$ search for $n \le 80$ to
+$n \le 111$.  Certified lower bounds at $n = 2 \times 10^9$ give
+$a(n)/n^2 \ge 0.49996$.
+\end{abstract}
+
+\tableofcontents
+
+% =======================================================================
+\section{Introduction}\label{sec:intro}
+% =======================================================================
+
+Given a binary string, every contiguous substring can be read as the
+binary representation of a non-negative integer (with leading zeros
+suppressed: $\texttt{01} = \texttt{1} = 1$, and $\texttt{0} = 0$).
+The question of maximising the number of distinct values simultaneously
+representable in a single $n$-bit string was motivated by a competition
+problem and appears as OEIS A112509~\cite{oeis}.
+
+\begin{definition}\label{def:main}
+  For $s \in \{0,1\}^n$, let $V(s)$ denote the set of distinct
+  non-negative integers representable by contiguous substrings of~$s$,
+  and set $f(s) = |V(s)|$.  Define
+  \[
+    a(n) = \max_{s \in \{0,1\}^n} f(s).
+  \]
+  We use the convention $a(0) = 0$.
+\end{definition}
+
+\begin{lemma}[Leading-bit reduction]\label{lem:leading-bit}
+  For every $n \ge 2$, every optimal string for $a(n)$ begins
+  with~$\mathtt{1}$.
+\end{lemma}
+
+\begin{proof}
+  Let $s = \mathtt{0}u$ have length~$n$, and set
+  $t = \mathtt{1}u$.  Every substring of~$s$ not beginning at the
+  first position is also a substring of~$t$.  A substring of~$s$
+  beginning at the first position has the form $\mathtt{0}v$, where
+  $v$ is a prefix of~$u$; if $v$ is nonempty, then
+  $\val(\mathtt{0}v) = \val(v)$ and $v$ occurs in~$t$ beginning at
+  the second position.  Thus changing the first bit from
+  $\mathtt{0}$ to $\mathtt{1}$ cannot lose any positive value.
+
+  If $u$ contains a zero, the value~$0$ is still represented in~$t$,
+  and the full word $t$ represents a positive integer whose standard
+  representation has length~$n$; this value is not represented in~$s$.
+  Hence $f(t) > f(s)$.
+
+  If $u = \mathtt{1}^{n-1}$, then
+  $V(s) = \{0,1,3,\ldots,2^{n-1}-1\}$ has size~$n$.  But
+  the string $\mathtt{1}^{\floor{n/2}}\mathtt{0}^{\ceil{n/2}}$
+  has
+  $\floor{n/2}\ceil{n/2} + \floor{n/2} + 1 > n$ distinct values for
+  every $n \ge 2$, as counted in Theorem~\ref{thm:lower}.  Hence
+  such an~$s$ is not optimal either.
+\end{proof}
+
+The first twenty values of the sequence are
+\[
+  1,\; 3,\; 5,\; 7,\; 10,\; 13,\; 17,\; 22,\; 27,\; 33,\;
+  40,\; 47,\; 55,\; 64,\; 73,\; 83,\; 94,\; 106,\; 118,\; 131.
+\]
+
+Prior to the present work, values for $n \le 80$ were certified by
+M.~Fuller using an A$^*$ search and updated in the OEIS log in 2025.
+No asymptotic results were available in the literature.
+
+\subsection*{Main theorem}
+
+The following theorem collects the main rigorous contributions of the
+paper.  Heuristic observations not covered by this statement are
+separated later in Section~\ref{sec:observations}.
+
+\begin{theorem}[Main results]\label{thm:main-results}
+  The sequence $a(n)$ has the following properties.
+  \begin{enumerate}[label=(\roman*),nosep]
+    \item The asymptotic limit exists and equals
+      \[
+        \lim_{n\to\infty} \frac{a(n)}{n^2} = \frac12.
+      \]
+      More precisely, for every $n \ge 36$,
+      \[
+        \frac{n^2}{2} - \frac{13}{4}n^{3/2}
+        \le a(n) \le \frac{n(n+1)}{2}.
+      \]
+    \item There are strings $s_n$ with
+      $f(s_n) \ge n^2/2 - O(n^{3/2})$ and
+      proportion of ones $1 - O(n^{-1/2})$.  Conversely, every
+      optimal string contains $O(n^{3/4})$ zeros.
+    \item The sequence is convex:
+      $a(n+1)-2a(n)+a(n-1) \ge 0$ for every $n \ge 2$.
+      Moreover $\DDa(n)=O(n^{3/4})$.
+    \item The values of $a(n)$, and the complete set of optimal
+      strings, are certified for $1 \le n \le 111$: Fuller's A$^*$ search
+      covers $n \le 80$, and the branch-and-bound computation in this
+      work covers $81 \le n \le 111$.
+    \item If two consecutive zero-separators of a binary string have
+      equal length~$s$, and the three adjacent one-block lengths are
+      $b_i,b_{i+1},b_{i+2}$, then they force
+      $\min(b_i,b_{i+1})\min(b_{i+1},b_{i+2})$ duplicate substring
+      values of the form $\val(1^j0^s1^k)$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  Part~(i) is Theorem~\ref{thm:limit}, with the explicit bounds from
+  Theorems~\ref{thm:upper} and~\ref{thm:quant-sharp}.  Part~(ii) is
+  Proposition~\ref{prop:near-opt-density} and
+  Proposition~\ref{prop:optimal-density}.  Part~(iii) is
+  Theorem~\ref{thm:convex} together with
+  Corollary~\ref{cor:dda-sublinear}.  Part~(iv) is
+  Theorem~\ref{thm:certified-computation}.  Part~(v) is
+  Theorem~\ref{thm:sep2-collisions}.
+\end{proof}
+
+\subsection*{Proof strategy and contributions}
+
+\begin{enumerate}[label=(\roman*)]
+  \item The upper bound is the elementary count of possible
+    leading-$\mathtt{1}$ substrings; the matching lower bound is an
+    explicit family of strings whose internal one-block lengths form a
+    strictly decreasing partition.  This avoids probabilistic existence
+    arguments and gives explicit constants.
+  \item The structural bounds convert the deficit
+    $n(n+1)/2-a(n)$ into restrictions on zeros and run lengths.  This
+    gives density bounds for optimal strings and explains why long
+    monochromatic runs are forced to be sublinear.
+  \item Convexity is proved by comparing an optimal string with its
+    prefix and suffix.  A zero-dichotomy lemma isolates the only
+    obstruction caused by the value~$0$.
+  \item The exact computation is certified by combining Fuller's A$^*$
+    search for $n \le 80$ with a branch-and-bound search for
+    $81 \le n \le 111$.  The branch-and-bound pruning rule is a
+    theorem: the suffix can add at most a certified residual
+    contribution plus a controlled number of crossing values.  The
+    suffix-automaton refinement only strengthens this upper bound.
+  \item The separator theorem is deliberately stated as a proved local
+    obstruction.  Stronger separator patterns observed in the data are
+    recorded separately as observations and conjectures.
+\end{enumerate}
+
+The accompanying data also record the related OEIS companion sequences
+obtained from optimal strings, including the smallest and largest
+optimal strings and the number of optima.
+
+% =======================================================================
+\section{Definitions and notation}\label{sec:definitions}
+% =======================================================================
+
+Throughout, binary strings are finite sequences over $\{0,1\}$.  The
+\emph{binary value} of $w = w_1 \cdots w_k \in \{0,1\}^k$ is
+\[
+  \val(w) = \sum_{i=1}^{k} w_i \, 2^{k-i}.
+\]
+A \emph{substring} of $s = s_1 \cdots s_n$ is any $s_i s_{i+1} \cdots
+s_j$ with $1 \le i \le j \le n$; we write $s[i..j]$ for this
+substring.  The value set is
+$V(s) = \{\val(s[i..j]) : 1 \le i \le j \le n\}$.
+
+The \emph{run-length encoding} (RLE) of $s$ is its decomposition into
+maximal constant blocks.  When $s$ begins with~$\mathtt{1}$, we write
+$s = 1^{b_1} 0^{c_1} 1^{b_2} 0^{c_2} \cdots$, where the $b_i$ are
+one-block lengths and the $c_i$ are zero-block lengths.  The zero-block
+lengths $c_i$, including a possible terminal zero-block, are called
+\emph{separators}.  Write $\ones(s)$ and $\zeros(s)$ for the total
+number of ones and zeros in~$s$.
+
+If $s$ has $1$-runs of lengths $\ell_1,\ldots,\ell_p$ and $0$-runs of
+lengths $m_1,\ldots,m_q$, set
+$L(s) = \max_t \ell_t$ and $K(s) = \max_t m_t$.
+
+The \emph{first difference} is $\Da(n) = a(n) - a(n{-}1)$ and the
+\emph{second difference} is
+$\DDa(n) = a(n) - 2a(n{-}1) + a(n{-}2)$.
+
+% =======================================================================
+\section{Upper bounds}\label{sec:upper}
+% =======================================================================
+
+\begin{theorem}[Trivial upper bound]\label{thm:upper}
+  For every $n \ge 1$, $\;a(n) \le n(n{+}1)/2$.
+  In particular, $\limsup_{n\to\infty} a(n)/n^2 \le \frac{1}{2}$.
+\end{theorem}
+
+\begin{proof}
+  Every distinct positive integer in $V(s)$ has a unique standard
+  binary representation beginning with~$\mathtt{1}$; distinct
+  positive values therefore correspond to distinct
+  leading-$\mathtt{1}$ substrings of~$s$.
+
+  If $s$ contains at least one zero, then $0 \in V(s)$, represented
+  only by substrings beginning with~$\mathtt{0}$.  At least one of
+  the $n(n{+}1)/2$ substrings begins with~$\mathtt{0}$, so the
+  number of leading-$\mathtt{1}$ substrings is at most
+  $n(n{+}1)/2 - 1$, giving $f(s) \le n(n{+}1)/2$.
+
+  If $s = \mathtt{1}^n$, then $0 \notin V(s)$ and
+  $f(s) = n \le n(n{+}1)/2$.
+\end{proof}
+
+\begin{remark}\label{rem:tight-upper}
+  The bound is tight at $n = 2$:
+  $V(\mathtt{10}) = \{0, 1, 2\}$, so $a(2) = 3 = 2 \cdot 3/2$.
+\end{remark}
+
+\begin{theorem}[Length-stratified upper bound]\label{thm:length-strat}
+  Let $K(n) = \max\{\ell \ge 1 : 2^{\ell-1} \le n - \ell + 1\}$.  Then
+  \[
+    a(n) \;\le\; 2^{K(n)} + \binom{n - K(n) + 1}{2}.
+  \]
+\end{theorem}
+
+\begin{proof}
+  Stratify the distinct positive values by the length~$\ell$ of their
+  standard binary representation.  The number $D_\ell$ of distinct
+  positive values representable by length-$\ell$ substrings of~$s$
+  satisfies $D_\ell \le \min(2^{\ell-1},\, n - \ell + 1)$: the first
+  bound counts binary strings of length~$\ell$ starting
+  with~$\mathtt{1}$; the second counts length-$\ell$ windows in~$s$.
+  Adding at most~$1$ for the value~$0$:
+  \[
+    a(n) \le 1 + \sum_{\ell=1}^{n} \min(2^{\ell-1},\, n - \ell + 1).
+  \]
+  By definition of~$K = K(n)$, the minimum equals $2^{\ell-1}$ for
+  $\ell \le K$ and $n - \ell + 1$ for $\ell > K$.  Hence
+  \[
+    1 + \sum_{\ell=1}^{K}(2^{\ell-1})
+      + \sum_{\ell=K+1}^{n}(n - \ell + 1)
+    = 2^{K} + \binom{n - K + 1}{2}. \qedhere
+  \]
+\end{proof}
+
+\begin{remark}
+  Since $K(n) = \log_2 n + O(\log\log n)$, the bound equals
+  $n^2/2 - O(n \log n)$, which is strictly sharper than
+  Theorem~\ref{thm:upper} for every $n \ge 3$.
+\end{remark}
+
+% =======================================================================
+\section{The elementary lower bound}\label{sec:lower}
+% =======================================================================
+
+\begin{theorem}[Elementary lower bound]\label{thm:lower}
+  For all $n \ge 2$,
+  \[
+    a(n) \;\ge\; \floor{n/2}\,\ceil{n/2} + \floor{n/2} + 1
+         \;\ge\; \frac{n^2}{4} + \frac{n}{2}.
+  \]
+  In particular, $\liminf_{n\to\infty} a(n)/n^2 \ge \frac{1}{4}$.
+\end{theorem}
+
+\begin{proof}
+  Set $x = \floor{n/2}$, $y = \ceil{n/2}$, and consider
+  $s = \mathtt{1}^x \mathtt{0}^y$.  Its substrings fall into three
+  disjoint families:
+  \begin{enumerate}[label=(\alph*)]
+    \item \textbf{All-ones:} $s[i..j]$ with $j \le x$, giving values
+      $2^k - 1$ for $k = 1,\ldots,x$: these are $x$ distinct odd
+      positive integers.
+    \item \textbf{All-zeros:} $s[i..j]$ with $i > x$, all having
+      value~$0$: one distinct value.
+    \item \textbf{Mixed:} $s[i..j]$ with $i \le x < j$, of the form
+      $\mathtt{1}^a \mathtt{0}^b$ with value $(2^a - 1) \cdot 2^b$,
+      where $a \in \{1,\ldots,x\}$ and $b \in \{1,\ldots,y\}$.
+      These $xy$ values are pairwise distinct: for fixed~$b$,
+      different~$a$ give different odd parts $(2^a - 1)$; for
+      different~$b$, the $2$-adic valuations differ.  Moreover, all
+      mixed values are even (disjoint from all-ones) and positive
+      (disjoint from zero).
+  \end{enumerate}
+  Thus $f(s) = x + 1 + xy = x(y + 1) + 1$.  With $x = \floor{n/2}$
+  and $y = \ceil{n/2}$: for even $n = 2m$,
+  $f(s) = m(m+1) + 1 = n^2/4 + n/2 + 1$; for odd $n = 2m+1$,
+  $f(s) = m(m+1) + 1 = (n^2 - 1)/4 + n/2 + 1/4 > n^2/4 + n/2$.
+\end{proof}
+
+% =======================================================================
+\section{The asymptotic limit}\label{sec:limit}
+% =======================================================================
+
+The elementary lower bound $a(n) \ge n^2/4 + O(n)$ and the upper bound
+$a(n) \le n(n{+}1)/2$ leave the leading constant of $a(n)/n^2$
+undetermined within $[1/4, 1/2]$.  We now show it equals~$1/2$ by
+constructing binary strings with $f(s) \ge n^2/2 - O(n^{3/2})$.
+
+\subsection{Strictly decreasing partitions}
+
+\begin{lemma}[Decreasing partition]\label{lem:partition}
+  Let $k \ge 2$ and $M \ge k(k{+}1)/2$ (equivalently,
+  $M/k \ge (k{+}1)/2$).  There exist strictly
+  decreasing positive integers $b_1 > b_2 > \cdots > b_k \ge 1$
+  with $\sum_{i=1}^k b_i = M$.  Moreover, they may be chosen with
+  $|b_i - M/k| \le (k{+}1)/2$ for all~$i$.
+\end{lemma}
+
+\begin{proof}
+  Set $q = \lfloor M/k - (k{-}1)/2 \rfloor$ and
+  $r = M - kq - k(k{-}1)/2$.
+
+  \textit{Step~1: $0 \le r < k$.}
+  From the floor definition, $q \le M/k - (k{-}1)/2 < q + 1$.
+  Multiplying by~$k$: $kq \le M - k(k{-}1)/2 < k(q{+}1)$,
+  so $0 \le r < k$.
+
+  \textit{Step~2: Construction.}  Define
+  \[
+    b_i =
+    \begin{cases}
+      q + k - i + 1, & 1 \le i \le r, \\
+      q + k - i,     & r < i \le k.
+    \end{cases}
+  \]
+
+  \textit{Step~3: Strict decrease.}
+  For consecutive $i, i{+}1$ both in the first case:
+  $b_i - b_{i+1} = 1 > 0$.
+  At the transition $i = r$ (if $r \ge 1$):
+  $b_r - b_{r+1} = (q + k - r + 1) - (q + k - r - 1) = 2 > 0$.
+  Both in the second case: $b_i - b_{i+1} = 1 > 0$.
+
+  \textit{Step~4: Sum equals~$M$.}
+  \begin{align*}
+    \sum_{i=1}^k b_i
+    &= \sum_{i=1}^{r}(q + k - i + 1) + \sum_{i=r+1}^{k}(q + k - i) \\
+    &= \sum_{i=1}^{k}(q + k - i) + r
+    = kq + \frac{k(k{-}1)}{2} + r = M.
+  \end{align*}
+
+  \textit{Step~5: Positivity.}
+  From $M \ge k(k{+}1)/2$, we get $M/k - (k{-}1)/2 \ge 1$, so
+  $q \ge 1$ and $b_k = q \ge 1$.
+
+  \textit{Step~6: Proximity.}
+  All $b_i \in [q,\, q + k]$ and
+  $M/k \in [q + (k{-}1)/2,\; q + (k{+}1)/2)$, so
+  $|b_i - M/k| \le (k{+}1)/2$.
+\end{proof}
+
+\subsection{The explicit construction}
+
+Fix $n \ge 64$ and set
+\begin{equation}\label{eq:params}
+  k = \floor{\sqrt{n}/4}, \qquad M = n - (k - 1).
+\end{equation}
+Since $n \ge 64$, we have $k \ge 2$.  Moreover,
+$k - 1 < \sqrt{n}/4 \le n/2$, so $M > n/2$; and since
+$k(k{+}1) \le 2k^2 \le n/8 \le n$, we have
+$M \ge n/2 \ge k(k{+}1)/2$, so Lemma~\ref{lem:partition} applies.
+
+Choose $b_1 > b_2 > \cdots > b_k \ge 1$ with $\sum b_i = M$ and
+$|b_i - M/k| \le k$, as guaranteed by Lemma~\ref{lem:partition}.
+Define the binary string
+\begin{equation}\label{eq:string}
+  s = \underbrace{1^{b_1}}_{\text{block~1}}\,0\,
+      \underbrace{1^{b_2}}_{\text{block~2}}\,0\,
+      \cdots\,0\,
+      \underbrace{1^{b_k}}_{\text{block~$k$}},
+\end{equation}
+consisting of $k$ one-blocks separated by $k - 1$ single zeros.  Its
+length is $\sum b_i + (k{-}1) = M + (k{-}1) = n$.
+
+\subsection{An injective family of substrings}
+
+For integers $i, j, \alpha, \beta$ satisfying
+\begin{equation}\label{eq:range}
+  1 \le i, \quad j \ge i + 2, \quad j \le k, \quad
+  1 \le \alpha \le b_i, \quad 1 \le \beta \le b_j,
+\end{equation}
+define $u_{i,j,\alpha,\beta}$ to be the substring of~$s$ beginning
+$\alpha$ positions before the end of block~$i$ and ending after the
+first $\beta$ ones of block~$j$.  Explicitly, its run-length encoding is
+\begin{equation}\label{eq:u}
+  \begin{aligned}
+  u_{i,j,\alpha,\beta}
+  &= 1^{\alpha}\,0\,1^{b_{i+1}}\,0\,\cdots\,0\,
+     1^{b_{j-1}}\,0\,1^{\beta}.
+  \end{aligned}
+\end{equation}
+The condition $j \ge i + 2$ ensures at least one full interior block
+$b_{i+1},\ldots,b_{j-1}$.  Every $u_{i,j,\alpha,\beta}$ starts and
+ends with~$\mathtt{1}$, so it is the standard binary representation of
+a positive integer.
+
+\begin{lemma}[Injectivity]\label{lem:inject}
+  The map $(i,j,\alpha,\beta) \mapsto u_{i,j,\alpha,\beta}$ is
+  injective on the range~\eqref{eq:range}.
+\end{lemma}
+
+\begin{proof}
+  Suppose $u_{i,j,\alpha,\beta} = u_{i',j',\alpha',\beta'}$ as
+  binary words.  The run-length encoding of~\eqref{eq:u} is
+  \[
+    (\alpha, 1, b_{i+1}, 1, \ldots, b_{j-1}, 1, \beta).
+  \]
+  Matching entries gives $\alpha = \alpha'$, $\beta = \beta'$, and
+  $(b_{i+1},\ldots,b_{j-1}) = (b_{i'+1},\ldots,b_{j'-1})$.  Since
+  $b_1 > \cdots > b_k$ is strictly decreasing, every consecutive
+  subsequence occurs in exactly one position, so $i = i'$ and
+  $j = j'$.
+\end{proof}
+
+\subsection{Quantitative lower bound}
+
+\begin{theorem}[Quantitative lower bound]\label{thm:quant}
+  For every $n \ge 64$,
+  $\;a(n) \ge n^2/2 - 15\,n^{3/2}$.
+\end{theorem}
+
+\begin{proof}
+  By Lemma~\ref{lem:inject}, the family
+  $\{u_{i,j,\alpha,\beta}\}$ consists of pairwise distinct positive
+  integers (each starts and ends with~$\mathtt{1}$), so
+  \begin{equation}\label{eq:f-lower}
+    a(n) \ge f(s) \ge \sum_{\substack{1 \le i < j \le k \\ j \ge i+2}} b_i b_j.
+  \end{equation}
+  Expanding:
+  \begin{equation}\label{eq:expand}
+    \sum_{\substack{i < j \\ j \ge i+2}} b_i b_j
+    = \frac{(\sum b_i)^2 - \sum b_i^2}{2}
+      - \sum_{i=1}^{k-1} b_i b_{i+1}.
+  \end{equation}
+
+  \textit{Step~1.}  Since $\sum b_i = M = n - k + 1$ and
+  $k \le \sqrt{n}/4$:
+  \[
+    \frac{M^2}{2} \ge \frac{(n - \sqrt{n}/4)^2}{2}
+    \ge \frac{n^2}{2} - \frac{n^{3/2}}{4}.
+  \]
+
+  \textit{Step~2.}  Writing $b_i = M/k + d_i$ with $|d_i| \le k$:
+  $\sum b_i^2 = M^2/k + \sum d_i^2 \le M^2/k + k^3$.
+  Since $k \ge \sqrt{n}/8$ (as $\lfloor x \rfloor \ge x/2$ for
+  $x \ge 2$), $M^2/k \le n^2/(\sqrt{n}/8) = 8n^{3/2}$ and
+  $k^3 \le n^{3/2}/64$, giving
+  \begin{equation}\label{eq:sumsq}
+    \sum_{i=1}^k b_i^2 < 9n^{3/2}.
+  \end{equation}
+
+  \textit{Step~3.}  By the AM--GM inequality,
+  $b_i b_{i+1} \le (b_i^2 + b_{i+1}^2)/2$, so
+  \begin{equation}\label{eq:adj}
+    \sum_{i=1}^{k-1} b_i b_{i+1} \le \sum_{i=1}^k b_i^2 < 9n^{3/2}.
+  \end{equation}
+
+  \textit{Conclusion.}  Substituting into~\eqref{eq:expand}:
+  \[
+    a(n) \ge \frac{n^2}{2} - \frac{n^{3/2}}{4}
+    - \frac{9n^{3/2}}{2} - 9n^{3/2}
+    = \frac{n^2}{2} - \frac{55}{4}\,n^{3/2}
+    > \frac{n^2}{2} - 15n^{3/2}. \qedhere
+  \]
+\end{proof}
+
+\begin{theorem}[Limit]\label{thm:limit}
+  $\displaystyle\lim_{n \to \infty} \frac{a(n)}{n^2} = \frac{1}{2}$.
+\end{theorem}
+
+\begin{proof}
+  Theorem~\ref{thm:upper} gives
+  $\limsup a(n)/n^2 \le 1/2$.  Theorem~\ref{thm:quant} gives
+  $a(n)/n^2 \ge 1/2 - 15/\sqrt{n} \to 1/2$.  The squeeze theorem
+  gives the result.
+\end{proof}
+
+\subsection{A sharper quantitative bound}
+
+The constant $15$ in Theorem~\ref{thm:quant} is an artifact of the
+conservative parameter choice $k = \lfloor\sqrt{n}/4\rfloor$.  By
+choosing $k = \lceil\sqrt{n}\,\rceil$ instead, we reduce the constant
+by a factor exceeding~$4$.
+
+\begin{theorem}[Sharper quantitative lower bound]\label{thm:quant-sharp}
+  For every $n \ge 36$,
+  $\;a(n) \ge n^2/2 - (13/4)\,n^{3/2}$.
+\end{theorem}
+
+\begin{proof}
+  The construction~\eqref{eq:string} and
+  Lemmas~\ref{lem:partition}--\ref{lem:inject} are unchanged; only
+  the parameter choice differs.  Set $k = \ceil{\sqrt{n}}$ and
+  $M = n - k + 1$.  Then $\sqrt{n} \le k \le \sqrt{n} + 1$.
+
+  \textit{Lemma~\ref{lem:partition} applies for $n \ge 36$.}
+  We need $M \ge k(k{+}1)/2$.  Since $k \le \sqrt{n} + 1$, this
+  requires $n - \sqrt{n} \ge \frac{1}{2}(\sqrt{n}+1)(\sqrt{n}+2)
+  = n/2 + 3\sqrt{n}/2 + 1$, i.e., $n/2 \ge 5\sqrt{n}/2 + 1$, which holds for
+  $\sqrt{n} \ge 6$, i.e., $n \ge 36$.
+
+  \textit{Variance bound.}  By Lemma~\ref{lem:partition}, each $b_i$
+  lies in $[q, q{+}k]$, giving
+  \begin{equation}\label{eq:sumsq-sharp}
+    \sum_{i=1}^k b_i^2
+    \le \frac{M^2}{k} + \frac{k(k{+}1)^2}{4}.
+  \end{equation}
+  By AM--GM,
+  $\sum_{i=1}^{k-1} b_i b_{i+1} \le \sum b_i^2$.
+  Substituting into~\eqref{eq:expand}:
+  \[
+    a(n) \ge \frac{M^2}{2}
+      - \frac{3M^2}{2k} - \frac{3k(k{+}1)^2}{8}.
+  \]
+
+  \textit{Term-by-term estimates} using
+  $\sqrt{n} \le k \le \sqrt{n} + 1$ and $M = n - k + 1$:
+  \begin{enumerate}[label=(\roman*),nosep]
+    \item $\dfrac{M^2}{2} \ge \dfrac{(n - \sqrt{n})^2}{2}
+      = \dfrac{n^2}{2} - n^{3/2} + \dfrac{n}{2}$.
+    \item $\dfrac{3M^2}{2k} \le \dfrac{3n^2}{2\sqrt{n}} = \dfrac{3}{2}\,n^{3/2}$.
+    \item Expanding $(\sqrt{n}+1)(\sqrt{n}+2)^2 = n^{3/2} + 5n + 8\sqrt{n} + 4$
+      gives
+      \[
+        \frac{3k(k{+}1)^2}{8}
+        \le \frac{3}{8}\,n^{3/2} + \frac{15}{8}\,n + 3\sqrt{n} + \frac{3}{2}.
+      \]
+  \end{enumerate}
+  Combining (i)--(iii):
+  \begin{equation}\label{eq:lb-allterms}
+    a(n) \ge \frac{n^2}{2} - \frac{23}{8}\,n^{3/2}
+      - \frac{11}{8}\,n - 3\sqrt{n} - \frac{3}{2}.
+  \end{equation}
+
+  \textit{Tail bound.}  We claim
+  \begin{equation}\label{eq:tail}
+    \frac{11}{8}\,n + 3\sqrt{n} + \frac{3}{2}
+    \le \frac{3}{8}\,n^{3/2}
+    \qquad (n \ge 36).
+  \end{equation}
+  Equivalently, $11n + 24\sqrt{n} + 12 \le 3n^{3/2}$.  At $n = 36$
+  the right side is $648$ and the left is $552$, so the inequality
+  holds.  The derivative of the difference,
+  $\frac{9}{2}\sqrt{n} - 11 - 12/\sqrt{n}$, is positive for
+  $n \ge 36$ (at $n = 36$: $27 - 11 - 2 = 14 > 0$) and increasing.
+  Hence~\eqref{eq:tail} holds for all $n \ge 36$.
+
+  Combining~\eqref{eq:lb-allterms} and~\eqref{eq:tail}:
+  \[
+    a(n) \ge \frac{n^2}{2} - \frac{23}{8}\,n^{3/2}
+    - \frac{3}{8}\,n^{3/2}
+    = \frac{n^2}{2} - \frac{13}{4}\,n^{3/2}. \qedhere
+  \]
+\end{proof}
+
+\begin{corollary}\label{cor:rate}
+  For all $n \ge 36$:
+  $\;\frac{1}{2} - \frac{13}{4}\,n^{-1/2}
+  \le a(n)/n^2
+  \le \frac{1}{2} + \frac{1}{2n}$.
+\end{corollary}
+
+\begin{remark}\label{rem:optimal-constant}
+  The constant $13/4$ is not optimal.  Choosing
+  $k = \ceil{\sqrt{3n/2}}$ and tracking the partition variance more
+  carefully yields $a(n) \ge n^2/2 - \sqrt{6}\,n^{3/2} + O(n)$,
+  with $\sqrt{6} \approx 2.449$.
+\end{remark}
+
+\begin{remark}\label{rem:comparison}
+  Theorem~\ref{thm:quant-sharp} is non-trivially positive for
+  $n \ge 43$, compared to $n \ge 901$ for Theorem~\ref{thm:quant};
+  the improvement is mainly useful because it makes the asymptotic
+  estimate visible already in the exact computational range.
+\end{remark}
+
+% =======================================================================
+\section{Density of ones}\label{sec:density}
+% =======================================================================
+
+\subsection{Near-optimal strings}
+
+\begin{proposition}\label{prop:near-opt-density}
+  There exists a family of strings $s_n$ with
+  $f(s_n) \ge n^2/2 - O(n^{3/2})$ and
+  $\ones(s_n)/n = 1 - O(n^{-1/2})$.
+\end{proposition}
+
+\begin{proof}
+  Take $s_n$ from~\eqref{eq:string}.  By Theorem~\ref{thm:quant},
+  $f(s_n) \ge n^2/2 - 15n^{3/2}$.  The string contains exactly
+  $k - 1 \le \sqrt{n}/4$ zeros, so
+  $\ones(s_n)/n \ge 1 - 1/(4\sqrt{n})$.
+\end{proof}
+
+\subsection{The zero-position penalty}
+
+\begin{lemma}[Zero-position bound]\label{lem:zero-pos}
+  Let $s \in \{0,1\}^n$ with $z \ge 1$ zeros at positions
+  $p_1 < \cdots < p_z$.  Then
+  \[
+    f(s) \le \frac{n(n{+}1)}{2} - \sum_{r=1}^z (n - p_r + 1) + 1.
+  \]
+  In particular, $\;f(s) \le n(n{+}1)/2 - z(z{+}1)/2 + 1$.
+\end{lemma}
+
+\begin{proof}
+  Since $z \ge 1$, the value $0$ is in $V(s)$ (any single zero bit
+  is a substring representing~$0$).  Every other element of $V(s)$ is
+  positive; for each such~$x$, choose a minimum-length representative
+  $w_x$.  By Lemma~\ref{lem:canon} (stated in
+  Section~\ref{sec:convexity}), $w_x$ starts with~$\mathtt{1}$.
+  This map is injective, so distinct positive values correspond to
+  distinct leading-$\mathtt{1}$ substrings.
+
+  Each zero at position $p_r$ eliminates $n - p_r + 1$ potential
+  leading-$\mathtt{1}$ starts (all substrings beginning there start
+  with~$\mathtt{0}$).  Hence the number of
+  leading-$\mathtt{1}$ substrings is at most
+  $n(n{+}1)/2 - \sum_r(n - p_r + 1)$, and
+  \[
+    f(s) = |\{0\}| + |\{x \in V(s) : x > 0\}|
+    \le 1 + \frac{n(n{+}1)}{2} - \sum_{r=1}^z(n - p_r + 1).
+  \]
+
+  The sum is minimized by placing the zeros in the rightmost available
+  positions, since each summand decreases as $p_r$ increases.  Thus
+  the minimum is achieved by $p_r = n - z + r$, giving
+  $\sum_r(z - r + 1) = z(z{+}1)/2$.
+\end{proof}
+
+\subsection{Optimal strings have few zeros}
+
+\begin{proposition}\label{prop:optimal-density}
+  Every optimal string $s_n^*$ satisfies
+  $\zeros(s_n^*) = O(n^{3/4})$, hence
+  $\ones(s_n^*)/n = 1 - O(n^{-1/4})$.
+\end{proposition}
+
+\begin{proof}
+  Let $z_n = \zeros(s_n^*)$.  Since $a(n) \ge 2$ for $n \ge 2$ (e.g.,
+  $f(\mathtt{10}) = 3$), the optimal string has $z_n \ge 1$ for
+  $n \ge 5$ (as $f(\mathtt{1}^n) = n < a(n)$).  By
+  Theorem~\ref{thm:quant-sharp} and Lemma~\ref{lem:zero-pos}:
+  \[
+    \frac{n^2}{2} - \frac{13}{4}\,n^{3/2}
+    \le a(n)
+    \le \frac{n(n{+}1)}{2} - \frac{z_n(z_n{+}1)}{2} + 1.
+  \]
+  Hence $z_n^2 \le z_n(z_n{+}1) \le (13/2)\,n^{3/2} + n + 4$,
+  giving $z_n = O(n^{3/4})$.
+\end{proof}
+
+% =======================================================================
+\section{Upper bounds from run structure}\label{sec:runs}
+% =======================================================================
+
+Lemma~\ref{lem:zero-pos} treats all zeros equally.  We now refine
+the bound using the \emph{run structure} of the zeros.
+
+\begin{lemma}[Run-sensitive bound]\label{lem:run-sensitive}
+  Let $s \in \{0,1\}^n$ with $z \ge 1$ zeros.  Let the maximal
+  zero-runs of $s$ have lengths $c_1,\ldots,c_m$,
+  with the $i$-th run beginning at position $a_i$ and
+  $r_i = n - (a_i + c_i) + 1$ positions to its right.  Then
+  \[
+    f(s) \le \frac{n(n{+}1)}{2}
+      - \sum_{i=1}^m \Bigl(c_i r_i + \binom{c_i{+}1}{2}\Bigr) + 1.
+  \]
+\end{lemma}
+
+\begin{proof}
+  Apply Lemma~\ref{lem:zero-pos} and group by zero-runs.
+  The $i$-th run occupies positions $a_i,\ldots,a_i + c_i - 1$,
+  contributing
+  $\sum_{t=0}^{c_i-1}(n - a_i - t + 1)
+  = c_i(n - a_i + 1) - c_i(c_i{-}1)/2
+  = c_i r_i + \binom{c_i{+}1}{2}$
+  to the penalty.
+\end{proof}
+
+\begin{corollary}[Fragmentation penalty]\label{cor:fragment}
+  If $s$ has $z \ge 1$ zeros in $m$ maximal runs, then
+  \[
+    f(s) \le \frac{n(n{+}1)}{2} - \frac{z(z{+}1)}{2} - \binom{m}{2} + 1.
+  \]
+\end{corollary}
+
+\begin{proof}
+  Since consecutive zero-runs are separated by at least
+  one~$\mathtt{1}$, for $i < m$:
+  $r_i \ge \sum_{j>i} c_j + (m - i)$.  Hence
+  $\sum_i c_i r_i \ge \sum_{i<j} c_i c_j + \sum_{i=1}^{m-1} c_i(m{-}i)$.
+  The identity
+  $\sum_{i<j} c_i c_j + \sum_i \binom{c_i{+}1}{2} = \binom{z{+}1}{2}$
+  holds since $z = \sum c_i$.
+  Finally, $\sum_{i=1}^{m-1} c_i(m{-}i) \ge \sum_{i=1}^{m-1}(m{-}i)
+  = \binom{m}{2}$ since each $c_i \ge 1$.
+\end{proof}
+
+\begin{remark}
+  Corollary~\ref{cor:fragment} shows that fragmenting zeros into more
+  runs always reduces the upper bound, regardless of positions.
+  Each additional zero-run incurs a penalty of at least $m - 1$.
+\end{remark}
+
+% =======================================================================
+\section{The run-length frequency bound}\label{sec:rlf}
+% =======================================================================
+
+\begin{theorem}[Run-length frequency bound]\label{thm:rlf}
+  Every $s \in \{0,1\}^n$ satisfies
+  \begin{equation}\label{eq:rlf}
+    f(s) \le 1 + L(s) + \binom{n{+}1}{2}
+      - \sum_{t=1}^p \binom{\ell_t{+}1}{2}
+      - \sum_{t=1}^q \binom{m_t{+}1}{2}.
+  \end{equation}
+\end{theorem}
+
+\begin{proof}
+  Let $V_1(s)$ be the set of values representable by an
+  all-$\mathtt{1}$ substring, and let $V_{\mathrm{m}}(s)$ be the set
+  of remaining positive values.  Then $V(s)$ is contained in the
+  disjoint union $\{0\} \cup V_1(s) \cup V_{\mathrm{m}}(s)$; the
+  singleton $\{0\}$ is harmless even when $0 \notin V(s)$.
+
+  \textit{Counting $V_1$.}
+  An all-$\mathtt{1}$ substring of length~$j$ has value $2^j - 1$,
+  depending only on~$j$.  Hence
+  $V_1(s) = \{2^j - 1 : 1 \le j \le L(s)\}$ and
+  $|V_1(s)| = L(s)$.
+
+  \textit{Counting $V_{\mathrm{m}}$.}
+  Every value in $V_{\mathrm{m}}(s)$ is represented by a substring
+  containing both~$\mathtt{0}$ and~$\mathtt{1}$.  Hence
+  $|V_{\mathrm{m}}(s)|$ is at most the number of pairs $(i,j)$ with
+  $1 \le i \le j \le n$ such that $s[i..j]$ contains both symbols.
+  This equals $\binom{n{+}1}{2}$ minus the count of monochromatic
+  substring pairs.  A maximal $1$-run of length~$\ell_t$ contributes
+  $\binom{\ell_t{+}1}{2}$ monochromatic pairs, and similarly for
+  $0$-runs.  Hence
+  $|V_{\mathrm{m}}| \le \binom{n{+}1}{2}
+  - \sum_t \binom{\ell_t{+}1}{2} - \sum_t \binom{m_t{+}1}{2}$.
+
+  Combining via $f(s) \le 1 + |V_1| + |V_{\mathrm{m}}|$
+  gives~\eqref{eq:rlf}.
+\end{proof}
+
+\begin{corollary}[Concentration of run lengths]\label{cor:concentration}
+  For any optimum~$s$ of $a(n)$ with $n \ge 36$:
+  \[
+    \sum_{t=1}^p \binom{\ell_t{+}1}{2}
+    + \sum_{t=1}^q \binom{m_t{+}1}{2}
+    \le \frac{13}{4}\,n^{3/2} + \frac{n}{2} + L(s) + 1.
+  \]
+\end{corollary}
+
+\begin{proof}
+  Rearrange Theorem~\ref{thm:rlf} with $f(s) = a(n)$ and apply the
+  lower bound $a(n) \ge n^2/2 - (13/4)\,n^{3/2}$
+  (Theorem~\ref{thm:quant-sharp}), using
+  $\binom{n{+}1}{2} = n^2/2 + n/2$.
+\end{proof}
+
+\begin{corollary}[Longest $1$-run]\label{cor:Lbound}
+  For every optimum~$s$ of $a(n)$ with $n \ge 36$:
+  $\;L(s) = O(n^{3/4})$.
+\end{corollary}
+
+\begin{proof}
+  The term $\binom{L{+}1}{2}$ appears on the left of
+  Corollary~\ref{cor:concentration}; all other terms are non-negative.
+  Hence $\binom{L{+}1}{2} \le (13/4)\,n^{3/2} + n/2 + L + 1$,
+  giving $L^2/2 \le (13/4)\,n^{3/2} + L + n/2 + 1$ and thus
+  $L \le \sqrt{13/2}\,n^{3/4} + O(n^{3/8})$.
+\end{proof}
+
+\begin{corollary}[Longest $0$-run]\label{cor:Kbound}
+  For every optimum~$s$ of $a(n)$ with $n \ge 36$:
+  $\;K(s) = O(n^{3/4})$.
+\end{corollary}
+
+\begin{proof}
+  The term $\binom{K{+}1}{2}$ appears on the left of
+  Corollary~\ref{cor:concentration}.  By Corollary~\ref{cor:Lbound},
+  $L(s) = O(n^{3/4})$, so
+  \[
+    \binom{K{+}1}{2}
+    \le \frac{13}{4}\,n^{3/2} + \frac{n}{2} + O(n^{3/4}) + 1.
+  \]
+  Hence $K^2 = O(n^{3/2})$, giving $K = O(n^{3/4})$.
+\end{proof}
+
+% =======================================================================
+\section{Convexity of the sequence}\label{sec:convexity}
+% =======================================================================
+
+\begin{theorem}[Convexity]\label{thm:convex}
+  For every $n \ge 2$,
+  $\;a(n{+}1) - 2a(n) + a(n{-}1) \ge 0$.
+  Equivalently, $\Da(n)$ is nondecreasing.
+\end{theorem}
+
+The proof requires two preliminary lemmas.
+
+\begin{lemma}[Canonical witness]\label{lem:canon}
+  For any $s \in \{0,1\}^n$ and any positive $x \in V(s)$, the
+  standard binary representation of~$x$ (the unique string starting
+  with~$\mathtt{1}$ of length $\lfloor \log_2 x \rfloor + 1$)
+  occurs as a substring of~$s$.  Moreover, every minimum-length
+  substring of~$s$ representing~$x$ equals this standard
+  representation.
+\end{lemma}
+
+\begin{proof}
+  Let $w_x$ be any minimum-length substring of~$s$ representing~$x$.
+  If $w_x$ started with~$\mathtt{0}$, removing the leading zero
+  gives a shorter representative, contradicting minimality.  So
+  $w_x$ starts with~$\mathtt{1}$ and has length at least
+  $\lfloor \log_2 x \rfloor + 1$.  By minimality, equality holds.
+  Since both $w_x$ and the standard representation start
+  with~$\mathtt{1}$, have the same length, and represent~$x$, they
+  are identical.  In particular, the standard representation occurs
+  as a substring of~$s$.
+\end{proof}
+
+\begin{lemma}[Zero dichotomy]\label{lem:zero-dichotomy}
+  Let $s \in \{0,1\}^n$ with $n \ge 2$, and let
+  $p = s_1 \cdots s_{n-1}$, $q = s_2 \cdots s_n$.
+  Then $0 \notin V(s) \setminus V(p)$ or
+  $0 \notin V(s) \setminus V(q)$ (or both).
+\end{lemma}
+
+\begin{proof}
+  If $0 \in V(s) \setminus V(p)$, then $s$ contains a zero but $p$
+  does not, so the only zero of~$s$ is at position~$n$.
+  If $0 \in V(s) \setminus V(q)$, then $s$ contains a zero but $q$
+  does not, so the only zero of~$s$ is at position~$1$.
+  Since $n \ge 2$, positions $1$ and $n$ are distinct, so both
+  conditions cannot hold simultaneously.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:convex}]
+  Fix $n \ge 2$ and let $s = s_1 \cdots s_n$ be optimal for~$a(n)$.
+  Let $p = s_1 \cdots s_{n-1}$ and $q = s_2 \cdots s_n$.  Since
+  $V(p) \subseteq V(s)$ and $V(q) \subseteq V(s)$:
+  \begin{equation}\label{eq:Vdiff}
+    |V(s) \setminus V(p)| \ge a(n) - a(n{-}1) = \Da(n), \qquad
+    |V(s) \setminus V(q)| \ge a(n) - a(n{-}1) = \Da(n).
+  \end{equation}
+
+  By Lemma~\ref{lem:zero-dichotomy}, at least one of
+  $V(s) \setminus V(p)$ and $V(s) \setminus V(q)$ contains only
+  positive values.  We show $a(n{+}1) \ge a(n) + \Da(n)$ in each
+  case.
+
+  \medskip
+  \noindent\textbf{Case 1: $0 \notin V(s) \setminus V(p)$.}
+  Every $x \in V(s) \setminus V(p)$ is positive.  By
+  Lemma~\ref{lem:canon}, the standard binary representation~$w_x$
+  (of length $\ell_x = \lfloor \log_2 x \rfloor + 1$, starting
+  with~$\mathtt{1}$) occurs as a substring of~$s$.
+
+  \textit{$w_x$ must end at position~$n$.}
+  If $w_x$ ended at position $j \le n - 1$, it would lie entirely
+  within~$p$, giving $x \in V(p)$, a contradiction.
+
+  Form $t = s\,\mathtt{0}$ of length $n + 1$.  For each
+  $x \in V(s) \setminus V(p)$, the string $w_x\mathtt{0}$ is a
+  substring of~$t$.
+
+  \textit{$w_x\mathtt{0}$ is the standard representation of $2x$.}
+  Since $w_x$ starts with~$\mathtt{1}$ and
+  $2^{\ell_x - 1} \le x < 2^{\ell_x}$, we have
+  $2^{\ell_x} \le 2x < 2^{\ell_x + 1}$, so $w_x\mathtt{0}$ starts
+  with~$\mathtt{1}$ and has length
+  $\lfloor \log_2(2x) \rfloor + 1 = \ell_x + 1$.
+
+  \textit{$2x \notin V(s)$.}  Suppose $2x \in V(s)$.  By
+  Lemma~\ref{lem:canon}, $s$ contains the standard representation
+  $w_x\mathtt{0}$ as a substring, say occupying positions
+  $i, \ldots, i + \ell_x$.  Then $w_x$ occupies positions
+  $i, \ldots, i + \ell_x - 1$ with $i + \ell_x \le n$, so
+  $w_x$ ends at position $i + \ell_x - 1 \le n - 1$, placing $w_x$
+  inside~$p$.  This gives $x \in V(p)$, a contradiction.
+
+  \textit{Injectivity.}  The map $x \mapsto 2x$ is injective.
+
+  \textit{Conclusion.}  The values
+  $\{2x : x \in V(s) \setminus V(p)\}$ are pairwise distinct,
+  lie in $V(t) \setminus V(s)$, and number at least~$\Da(n)$.
+  Hence $f(t) \ge a(n) + \Da(n)$.
+
+  \medskip
+  \noindent\textbf{Case 2: $0 \notin V(s) \setminus V(q)$.}
+  Every $x \in V(s) \setminus V(q)$ is positive.  By
+  Lemma~\ref{lem:canon}, the standard representation~$w_x$ occurs
+  in~$s$.
+
+  \textit{$w_x$ must start at position~$1$.}
+  If $w_x$ started at position $i \ge 2$, it would lie entirely
+  within $q = s_2 \cdots s_n$, giving $x \in V(q)$, a contradiction.
+
+  Form $t = \mathtt{1}\,s$ of length $n + 1$.  For each
+  $x \in V(s) \setminus V(q)$, the string $\mathtt{1}\,w_x$ is a
+  substring of~$t$ (occupying positions $1, \ldots, \ell_x + 1$).
+  Set $y = 2^{\ell_x} + x$.
+
+  \textit{$\mathtt{1}\,w_x$ is the standard representation of~$y$.}
+  Since $w_x$ starts with~$\mathtt{1}$, the string
+  $\mathtt{1}\,w_x$ starts with~$\mathtt{1}$ and has length
+  $\ell_x + 1$.  Now
+  $2^{\ell_x} \le y < 2^{\ell_x + 1}$, so the length is correct.
+
+  \textit{$y \notin V(s)$.}  If $y \in V(s)$, by
+  Lemma~\ref{lem:canon} the string $\mathtt{1}\,w_x$ occurs in~$s$,
+  say starting at position~$i$.  Then $w_x$ occupies positions
+  $i+1, \ldots, i + \ell_x$ with $i + 1 \ge 2$, so $w_x$ lies
+  within $q = s_2 \cdots s_n$, giving $x \in V(q)$, a contradiction.
+
+  \textit{Injectivity.}  If $\ell_x = \ell_{x'}$ then
+  $y \ne y'$ since $x \ne x'$.  If $\ell_x < \ell_{x'}$ then
+  $y < 2^{\ell_x + 1} \le 2^{\ell_{x'}} \le y'$.
+
+  \textit{Conclusion.}  The values
+  $\{2^{\ell_x} + x : x \in V(s) \setminus V(q)\}$ are pairwise
+  distinct, lie in $V(t) \setminus V(s)$, and number at
+  least~$\Da(n)$.
+  Hence $f(t) \ge a(n) + \Da(n)$.
+
+  \medskip
+  In both cases,
+  $a(n{+}1) \ge a(n) + \Da(n) = 2a(n) - a(n{-}1)$.
+\end{proof}
+
+\begin{remark}\label{rem:convex-upper}
+  Theorem~\ref{thm:convex} establishes $\DDa(n) \ge 0$.
+  Computational data further suggest $\DDa(n) \le 2$ for all
+  $n$ (see Section~\ref{sec:observations}).
+\end{remark}
+
+We now derive a non-trivial upper bound on $\DDa(n)$ by combining
+convexity with the global asymptotic lower bound.
+
+\begin{lemma}[First-difference upper bound]\label{lem:da-upper}
+  For all $n \ge 1$, $\;\Da(n) \le n$.
+\end{lemma}
+
+\begin{proof}
+  Let $t$ be any string of length~$n$ and $p = t_1 \cdots t_{n-1}$.
+  Every value in $V(t) \setminus V(p)$ is represented only by
+  substrings ending at position~$n$, of which there are at most~$n$.
+  Hence $f(t) \le f(p) + n \le a(n{-}1) + n$, so
+  $a(n) \le a(n{-}1) + n$.
+\end{proof}
+
+\begin{theorem}[Second-difference upper bound]\label{thm:dda-upper}
+  Define the \emph{deficit} $E(n) = n(n{+}1)/2 - a(n)$.  Then for
+  all $n \ge 2$ and every integer $1 \le h < n$,
+  \[
+    \DDa(n) \le \frac{h{+}1}{2} + \frac{E(n)}{h}.
+  \]
+  Optimising in $h$ gives
+  $\;\DDa(n) \le \sqrt{2E(n)} + O(1)$.
+\end{theorem}
+
+\begin{proof}
+  By convexity (Theorem~\ref{thm:convex}), $\Da$ is nondecreasing,
+  so for any $h \ge 1$:
+  \[
+    a(n) - a(n{-}h) = \sum_{j=0}^{h-1} \Da(n{-}j) \le h\,\Da(n).
+  \]
+  Since $a(n{-}h) \le (n{-}h)(n{-}h{+}1)/2$, we obtain
+  \begin{align*}
+    \Da(n) &\ge \frac{a(n) - a(n{-}h)}{h}
+    \ge \frac{n(n{+}1)/2 - E(n) - (n{-}h)(n{-}h{+}1)/2}{h} \\
+    &= \frac{h(2n{-}h{+}1)/2 - E(n)}{h}
+    = n - \frac{h{-}1}{2} - \frac{E(n)}{h}.
+  \end{align*}
+  Combining with Lemma~\ref{lem:da-upper}:
+  \[
+    \DDa(n) = \Da(n{+}1) - \Da(n)
+    \le (n{+}1) - \Bigl(n - \frac{h{-}1}{2} - \frac{E(n)}{h}\Bigr)
+    = \frac{h{+}1}{2} + \frac{E(n)}{h}.
+  \]
+  Setting $h = \lfloor \sqrt{2E(n)} \rfloor$ gives
+  $\DDa(n) \le \sqrt{2E(n)} + O(1)$.
+\end{proof}
+
+\begin{corollary}\label{cor:dda-sublinear}
+  $\DDa(n) = O(n^{3/4})$.  More precisely, for $n \ge 36$,
+  \[
+    \DDa(n) \le \sqrt{\tfrac{13}{2}\,n^{3/2} + n} + O(1).
+  \]
+\end{corollary}
+
+\begin{proof}
+  By Theorem~\ref{thm:quant-sharp},
+  $E(n) \le \tfrac{13}{4}\,n^{3/2} + \tfrac{n}{2}$ for $n \ge 36$.
+  Apply Theorem~\ref{thm:dda-upper}.
+\end{proof}
+
+\begin{remark}
+  Any improvement in the global deficit bound
+  $E(n) = n(n{+}1)/2 - a(n)$ immediately tightens the second-difference
+  bound via Theorem~\ref{thm:dda-upper}.  If the conjectured
+  $E(n) = \Theta(n^{3/2})$ is optimal, the method yields
+  $\DDa(n) = O(n^{3/4})$ and cannot reach the empirical bound
+  $\DDa(n) \le 2$ without a fundamentally different structural
+  argument.
+\end{remark}
+
+% =======================================================================
+\section{The ones-weighted crossing bound}\label{sec:crossing}
+% =======================================================================
+
+The following bound, which partitions the score of a string into a
+prefix contribution and a residual, provides the theoretical
+foundation for the branch-and-bound exact solver described in
+Section~\ref{sec:computation}.
+
+\begin{lemma}[Ones-weighted crossing bound]\label{lem:crossing}
+  Let $p \in \{0,1\}^k$ be a prefix and
+  $e \in \{0,1\}^m$ any extension, with $n = k + m$ and $s = pe$.
+  Let $V_0(p) = \{\val(p[i..j]) : 1 \le i \le j \le k\}$.  Then
+  \[
+    f(s) \le |V_0(p)| + a(m) + \ones(p) \cdot m,
+  \]
+  where $\ones(p) = \#\{i : p_i = 1\}$.
+\end{lemma}
+
+\begin{proof}
+  Write $V_+(p,e)$ for the set of values represented by substrings
+  not entirely within~$p$.  Then
+  $f(s) \le |V_0(p)| + |V_+(p,e)|$.
+
+  Partition $V_+(p,e)$ by where each defining substring begins:
+
+  \textit{(i) Suffix-only substrings} (starting at position $> k$)
+  contribute at most $|V(e)| \le a(m)$ values.
+
+  \textit{(ii) Zero-leading crossing substrings} (starting at $i \le k$
+  with $p_i = 0$, ending at $j > k$):  stripping leading zeros either
+  reduces to a suffix-only value or to a one-leading crossing value.
+  These contribute no new values beyond those in (i) and (iii).
+
+  \textit{(iii) One-leading crossing substrings} (starting at $i \le k$
+  with $p_i = 1$, extending $j \in \{1,\ldots,m\}$ bits into~$e$):
+  for fixed~$i$, set $A_i = \val(p[i..k]) \ge 1$.  The value is
+  $v_{i,j} = A_i \cdot 2^j + \val(e[1..j])$.  For $j_1 < j_2$:
+  $v_{i,j_2} \ge A_i \cdot 2^{j_2} \ge 2A_i \cdot 2^{j_1}
+  > (A_i + 1) \cdot 2^{j_1} - 1 \ge v_{i,j_1}$
+  (using $A_i \ge 1$), so the $m$ values are strictly increasing in~$j$.
+  There are $\ones(p)$ one-positions, giving at most
+  $\ones(p) \cdot m$ crossing values.
+
+  Combining: $|V_+| \le a(m) + \ones(p) \cdot m$.
+\end{proof}
+
+\begin{remark}
+  In the branch-and-bound solver, this bound is evaluated at every
+  node of the search tree: the prefix~$p$ is the partially
+  constructed string, and $a(m)$ is looked up from previously proven
+  values or from Theorem~\ref{thm:length-strat}.  The bound is
+  typically $30$--$50\%$ tighter than the naive residual
+  $n(n{+}1)/2 - |V_0(p)|$.
+\end{remark}
+
+\subsection{Suffix-automaton refinement}
+
+The crossing bound of Lemma~\ref{lem:crossing} counts $\ones(p) \cdot m$
+crossing values as potentially new.  Many of these are already present
+inside the fixed prefix and can be detected via the suffix automaton
+(SAM) of~$p$.
+
+\begin{lemma}[SAM savings]\label{lem:sam-savings}
+  Let $p \in \{0,1\}^{k}$, let $e \in \{0,1\}^m$, put $s=pe$, and let
+  $\mathcal{S}$ be the suffix automaton of~$p$.  For each position
+  $i \le k$ with $p_i = 1$, define $d_i$ to be the largest
+  integer $d$ such that for every binary string $w \in \{0,1\}^d$,
+  the word $p[i..k] \cdot w$ has value already in $V_0(p)$ (i.e., the
+  SAM state reached from the suffix $p[i..k]$ has a complete binary
+  subtree of depth~$d$).  Then
+  \[
+    f(s) \le |V_0(p)| + a(m) + \sum_{\substack{i=1 \\ p_i=1}}^{k}
+    (m - d_i)^+,
+  \]
+  where $(x)^+ = \max(x, 0)$.
+\end{lemma}
+
+\begin{proof}
+  By the proof of Lemma~\ref{lem:crossing}, each one-position
+  $i$ contributes at most $m$ crossing values $v_{i,1},\ldots,v_{i,m}$.
+  The suffix automaton represents exactly the substrings of the fixed
+  prefix.  Therefore, if the state reached by the suffix $p[i..k]$ has
+  all binary paths of length~$j$, then for every $w \in \{0,1\}^j$ the
+  word $p[i..k]w$ occurs as a substring of the
+  fixed prefix and its value already lies in $V_0(p)$.  For
+  $j = 1,\ldots,d_i$, these are precisely the first $d_i$ possible
+  crossing extensions from position~$i$, so they are guaranteed
+  duplicates.  Subtracting them from the budget of $m$ possible new
+  crossing values gives at most $(m-d_i)^+$ new values from that
+  position.  Summing over all one-positions yields the result.
+\end{proof}
+
+\begin{remark}
+  Computing all $d_i$ via a bounded breadth-first search of depth
+  $J \le 3$ in the SAM takes $O(k \cdot 2^J)$ time per node of the
+  search tree.  In practice, this refinement reduces the crossing
+  budget by $20$--$40\%$ at moderate prefix lengths, and is the
+  primary reason the branch-and-bound solver terminates within
+  practical time for $n$ up to~$111$.
+\end{remark}
+
+% =======================================================================
+\section{Separator structure}\label{sec:separator}
+% =======================================================================
+
+The certified optimal strings for $81 \le n \le 111$ all have
+separator sequence beginning $(1,2,1,1,\ldots)$.  We prove below that
+any two consecutive separators of equal length produce forced
+collisions (Theorem~\ref{thm:sep2-collisions}).  This gives a rigorous
+obstruction to repeated adjacent separator lengths, but it is not by
+itself a proof of the full separator pattern.
+
+\subsection{Forced collisions from equal consecutive separators}
+
+The following theorem shows that two consecutive separators of the
+same length force a quadratic number of collisions.
+
+\begin{theorem}[Forced collisions from equal consecutive separators]
+\label{thm:sep2-collisions}
+  Let $w$ be a binary string with ones-block lengths
+  $b_1, b_2, b_3, \ldots$ and separator lengths $s_1, s_2, \ldots$,
+  so that $w$ begins
+  $\mathtt{1}^{b_1}\,\mathtt{0}^{s_1}\,\mathtt{1}^{b_2}\,
+   \mathtt{0}^{s_2}\,\mathtt{1}^{b_3}\,\cdots$.
+  Suppose two consecutive separators have the same length:
+  $s_i = s_{i+1} = s$ for some~$i$.  Set
+  $J = \min(b_i, b_{i+1})$ and $K = \min(b_{i+1}, b_{i+2})$.  Then the
+  $J \cdot K$ values
+  \[
+    \bigl\{v_{j,k} = \val(\mathtt{1}^j\,\mathtt{0}^s\,\mathtt{1}^k) :
+    1 \le j \le J,\; 1 \le k \le K\bigr\}
+  \]
+  are pairwise distinct and each appears at least twice as a
+  substring of~$w$.  Explicitly,
+  $v_{j,k} = (2^j - 1)\cdot 2^{s+k} + 2^k - 1 = 2^{j+s+k} - 2^{s+k} + 2^k - 1$.
+\end{theorem}
+
+\begin{proof}
+  \textbf{Two occurrences.}
+  For $j \le J$ and $k \le K$, the pattern
+  $P_{j,k} = \mathtt{1}^j\,\mathtt{0}^s\,\mathtt{1}^k$ (representing
+  $v_{j,k}$) appears at two positions in~$w$:
+  \begin{enumerate}[nosep]
+    \item Crossing separator~$i$: the last $j$ ones of
+      block~$i$ ($j \le b_i$), then $\mathtt{0}^s = \mathtt{0}^{s_i}$,
+      then the first $k$ ones of block~$i{+}1$ ($k \le b_{i+1}$).
+    \item Crossing separator~$i{+}1$: the last
+      $j$ ones of block~$i{+}1$ ($j \le b_{i+1}$), then
+      $\mathtt{0}^s = \mathtt{0}^{s_{i+1}}$, then the first
+      $k$ ones of block~$i{+}2$ ($k \le b_{i+2}$).
+  \end{enumerate}
+  These positions differ since $b_{i+1} \ge 1$.
+
+  \textbf{Distinctness.}
+  Each $v_{j,k}$ has standard binary representation
+  $\mathtt{1}^j\mathtt{0}^s\mathtt{1}^k$ (a string of length
+  $j + s + k$ starting with~$\mathtt{1}$).  If
+  $v_{j_1,k_1} = v_{j_2,k_2}$, their standard representations are
+  identical, so $j_1 + k_1 = j_2 + k_2$ (same total length) and the
+  $\mathtt{0}^s$ block occupies the same positions: $j_1 = j_2$,
+  hence $k_1 = k_2$.
+
+  \textbf{These are genuine collisions.}
+  Each $v_{j,k}$ appears at two distinct starting positions, so its
+  substring occurrence is counted twice but contributes only once to
+  $f(w)$.  This represents $J \cdot K$ forced collisions.
+\end{proof}
+
+\begin{corollary}\label{cor:sep2-deficit}
+  If a string $w$ with $z \ge 1$ zeros has $s_i = s_{i+1}$ for some~$i$,
+  then
+  $f(w) \le n(n{+}1)/2 - Z(w) + 1 - C(w) - J \cdot K$,
+  where $p_1<\cdots<p_z$ are the zero positions,
+  $Z(w) = \sum_{r=1}^z(n - p_r + 1)$ is the zero-position penalty
+  (Lemma~\ref{lem:zero-pos}),
+  $C(w) = \sum_j \binom{b_j+1}{2} - \max_j b_j$ counts one-block
+  self-collisions, and $J, K$ are as in
+  Theorem~\ref{thm:sep2-collisions}.
+\end{corollary}
+
+\begin{proof}
+  Let $N = n(n{+}1)/2$.  By Lemma~\ref{lem:canon}, every positive
+  value has a standard representative beginning with~$\mathtt{1}$.
+  There are at most $N - Z(w)$ leading-$\mathtt{1}$ substrings, and
+  the value~$0$ contributes at most one further value.
+
+  Among the leading-$\mathtt{1}$ substrings, the all-$\mathtt{1}$
+  substrings contribute $\sum_j \binom{b_j+1}{2}$ occurrences but at
+  most $\max_j b_j$ distinct values, so they account for at least
+  $C(w)$ duplicate occurrences.
+
+  The $J \cdot K$ collisions of Theorem~\ref{thm:sep2-collisions} are
+  disjoint from these all-$\mathtt{1}$ collisions because their
+  standard representatives
+  $P_{j,k} = \mathtt{1}^j\,\mathtt{0}^s\,\mathtt{1}^k$ contain a
+  zero.  They are also disjoint from zero-starting substrings because
+  each $P_{j,k}$ begins with~$\mathtt{1}$.  Therefore the leading-one
+  substring count overcounts the positive values by at least
+  $C(w) + J K$, and
+  \[
+    f(w) \le 1 + (N - Z(w)) - C(w) - J K. \qedhere
+  \]
+\end{proof}
+
+\begin{remark}
+  The theorem requires only that $s_i = s_{i+1}$; it applies to
+  consecutive separators of any common length.
+  Making two consecutive separators differ eliminates the collisions:
+  the two occurrences of $P_{j,k}$ then cross zero-blocks of different
+  lengths, producing the distinct values
+  $\val(\mathtt{1}^j\,\mathtt{0}^{s_i}\,\mathtt{1}^k) \ne
+   \val(\mathtt{1}^j\,\mathtt{0}^{s_{i+1}}\,\mathtt{1}^k)$.
+
+  For $n \approx 100$ with hypothetical separator sequence
+  $(1, 1, \ldots)$, the first pair $(s_1, s_2) = (1, 1)$ gives
+  $J \cdot K = \min(b_1, b_2) \cdot \min(b_2, b_3)
+   \approx 17 \cdot 14 = 238$ forced collisions, roughly $20\%$ of
+  the total deficit.
+  Changing $s_2$ from~$1$ to~$2$ eliminates these collisions at the
+  cost of one additional bit; separators $\ge 3$ also work but
+  waste an extra position.  In the computed optima, later separator
+  pairs have adjacent blocks small enough that the collision count
+  $\min(b_i, b_{i+1}) \cdot \min(b_{i+1}, b_{i+2})$ is negligible,
+  making the cost of an extra separator bit outweigh the observed
+  savings.  This is consistent with the pattern
+  $(1, 2, 1, 1, 1, \ldots)$ favoured by the data, but the infinite
+  statement remains
+  Conjecture~\ref{conj:seps}.
+\end{remark}
+
+% =======================================================================
+\section{Computational results}\label{sec:computation}
+% =======================================================================
+
+\subsection{Scoring}\label{sec:scoring}
+
+For small $n$ ($n \lesssim 30$), $f(s)$ is computed by inserting all
+substring values into a hash set.  For larger~$n$, we use the suffix
+array~$\mathrm{SA}$ and LCP array (via Kasai's
+algorithm~\cite{kasai2001}):
+\[
+  f(s) = \sum_{\substack{0 \le i < n \\ s[\mathrm{SA}[i]] = 1}}
+    (n - \mathrm{SA}[i] - \mathrm{LCP}[i])
+    + \mathbf{1}[\mathtt{0} \in s].
+\]
+Here the suffix array is indexed from~$0$ and $\mathrm{LCP}[0]=0$.
+This formula counts, for each suffix in sorted order, the number of
+new leading-$\mathtt{1}$ substrings it contributes beyond those
+shared with the preceding suffix (as measured by the LCP), then adds
+$1$ if the string contains any zero (for the value~$0$).  The
+standard suffix-array argument applies because every positive value is
+identified with its unique leading-$\mathtt{1}$ representation:
+prefixes of a suffix that are not longer than its LCP with the
+preceding suffix have already occurred, and longer prefixes are new.
+The computation runs in $O(n \log n)$ time, or $O(n)$ using the DivSufSort
+library~\cite{pydivsufsort} for suffix array construction.
+
+\subsection{Branch-and-bound exact solver}\label{sec:bb-solver}
+
+To prove exact values of $a(n)$ beyond $n = 80$, we developed a
+branch-and-bound solver that constructs $n$-bit strings bit-by-bit,
+pruning branches whose upper bound falls below the current best
+known score.
+
+\begin{definition}[Upper bound at a search node]
+  At a node where the prefix $p \in \{0,1\}^k$ has been fixed
+  (with $m = n - k$ remaining bits), let $B(m)$ be any certified upper
+  bound for $a(m)$.  The node upper bound is
+  \[
+    U(p) = |V_0(p)| + B(m) + \sum_{\substack{i=1 \\ p_i=1}}^{k}
+    (m - d_i)^+,
+  \]
+  where $V_0(p)$ is the set of distinct values of substrings
+  entirely within~$p$.  In a self-contained certificate one may take
+  $B(m)$ from Theorem~\ref{thm:length-strat}; tighter runs may replace
+  this by exact values only when those values are independently
+  certified.  The integer $d_i$ is the SAM savings depth at
+  position~$i$ (Lemma~\ref{lem:sam-savings}).
+\end{definition}
+
+Since $B(m) \ge a(m)$, Lemmas~\ref{lem:crossing} and
+\ref{lem:sam-savings} imply that $U(p)$ is a valid upper bound on
+$f(s)$ for any completion $s$ of~$p$.
+
+The algorithm (pseudocode below) proceeds as follows:
+\begin{enumerate}[nosep]
+  \item Initialise the incumbent $L \gets$ a known lower bound (from
+    a heuristic search or a previously computed value for a
+    nearby~$n$).
+  \item Perform depth-first search over all possible bit assignments,
+    maintaining a suffix automaton (SAM) for the current prefix to
+    track $|V_0(p)|$ and the SAM savings~$d_i$ incrementally.
+  \item At each node, compute $U(p)$.  In value-only mode, prune when
+    $U(p) \le L$; in \texttt{collect\_all} mode, prune only when
+    $U(p) < L$, so branches that may contain further optima are kept.
+  \item At a leaf ($k = n$), evaluate $f(s)$ exactly and update $L$
+    if $f(s) > L$.
+  \item On termination, $L = a(n)$.
+\end{enumerate}
+
+\begin{center}
+\begin{tabular}{l}
+\toprule
+\textsc{BranchAndBound}$(n)$ \\
+\midrule
+\textbf{if} $n = 1$: \quad \textbf{return} $1$ \\
+$L \gets \text{initial lower bound}$ \\
+\textsc{Search}$(\mathtt{1}, \text{SAM}_{\mathtt{1}}, 1, 1)$ \\
+\textbf{return} $L$ \\[4pt]
+\textsc{Search}$(p,\; \mathcal{S},\; |V_0|,\; \ones(p))$ \\
+\quad $k \gets |p|$; \quad $m \gets n - k$ \\
+\quad \textbf{if} $k = n$: \quad $L \gets \max(L, f(p))$; \quad \textbf{return} \\
+\quad Compute $d_i$ for each one-position $i$ via SAM~$\mathcal{S}$ \\
+\quad $U \gets |V_0| + B(m) + \sum_{i:\, p_i=1} (m - d_i)^+$ \\
+\quad \textbf{if} \textsc{Prunable}$(U,L)$: \quad \textbf{return} \\
+\quad \textbf{for} $b \in \{1, 0\}$: \\
+\quad\quad Extend SAM: $\mathcal{S}' \gets \textsc{SamExtend}(\mathcal{S}, b)$ \\
+\quad\quad $|V_0'| \gets$ updated distinct substring count \\
+\quad\quad \textsc{Search}$(p \cdot b,\; \mathcal{S}',\; |V_0'|,\; \ones(p) + b)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+Here \textsc{Prunable}$(U,L)$ means $U < L$ in \texttt{collect\_all}
+mode and $U \le L$ in value-only mode.
+
+\begin{remark}[Correctness]
+  The solver's correctness rests on two properties: (1)~the upper
+  bound $U(p) \ge f(s)$ for every completion $s$ of prefix~$p$
+  (Lemmas~\ref{lem:crossing} and~\ref{lem:sam-savings}), so pruning
+  never discards a global optimum; and (2)~the search exhaustively
+  explores all branches not pruned.  The SAM provides exact tracking
+  of $|V_0(p)|$ (each SAM state corresponds to an equivalence class
+  of right extensions; the total count of distinct substrings is
+  maintained incrementally as each bit is appended).
+
+  The value search is run with initial prefix~$\mathtt{1}$, which is
+  valid by Lemma~\ref{lem:leading-bit}.  For results that assert
+  properties of all optimal strings, the solver is run in
+  \texttt{collect\_all} mode: branches with $U(p)=L$ are not pruned
+  merely because one incumbent optimum is already known.  Thus every
+  completion with score $a(n)$ is either reached and recorded or lies
+  in a subtree whose certified upper bound is below~$a(n)$.
+\end{remark}
+
+\begin{remark}[Implementation and reproducibility]
+  The implementation uses Python~3.13 with Numba~\cite{numba}
+  for JIT compilation of the inner scoring loop and the SAM
+  operations.  Parallel search is performed across multiple workers,
+  each exploring a subtree rooted at a distinct prefix of length
+  $\approx 20$.  Workers share the incumbent~$L$ via atomic updates.
+  Typical running times range from seconds ($n \le 90$) to
+  $\sim\!48$ hours ($n = 111$) on a 16-core workstation.
+
+  Source code is available at~\cite{github}.  To reproduce the new
+  extension, run the branch-and-bound solver for each target~$n$ with
+  \texttt{collect\_all=True}; the solver outputs the exact value, the
+  complete list of optimal strings, and the number of nodes explored
+  and pruned.  The companion sequences A112510, A112511, and A156025
+  are then obtained respectively as the minimum, maximum, and
+  cardinality of this list; A156022--A156024 follow from the
+  corresponding value counts.
+\end{remark}
+
+\subsection{Exact values}
+
+\begin{theorem}[Certified exact computation]\label{thm:certified-computation}
+  The values of $a(n)$ are certified for $1 \le n \le 111$.  For each
+  such~$n$, the complete list of optimal strings is certified, and
+  hence so are the corresponding values of A112510, A112511, and
+  A156025.  The values of A156022--A156024 then follow from the
+  definitions.
+\end{theorem}
+
+\begin{proof}
+  Fuller's A$^*$ search certifies the range $1 \le n \le 80$.  For
+  $81 \le n \le 111$, the branch-and-bound computation described in
+  Section~\ref{sec:bb-solver}, run in \texttt{collect\_all} mode, uses
+  the certified values for smaller residuals as exact upper bounds
+  $B(m)=a(m)$.  Hence the upper bound $U(p)$ is certified at every
+  search node.  Exhaustive exploration of all branches not pruned then
+  proves the optimum.  Since \texttt{collect\_all} mode does not prune
+  branches with $U(p)=a(n)$, every string attaining the optimum is
+  recorded.  Taking the minimum, maximum, and cardinality of this list
+  gives A112510, A112511, and A156025, respectively.
+\end{proof}
+
+The full machine-readable table is included with the source data; the
+main text records only representative values and the growth ratio.
+\begin{center}
+\begin{tabular}{rrrl}
+  \toprule
+  $n$ & $a(n)$ & $a(n)/n^2$ & source \\
+  \midrule
+  50  & 899        & 0.3596 & Fuller/OEIS \\
+  80  & 2{,}423    & 0.3786 & Fuller/OEIS \\
+  100 & 3{,}875    & 0.3875 & certified here \\
+  111 & 4{,}826    & 0.3916 & certified here \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Exploratory lower bounds for \texorpdfstring{$112 \le n \le 200$}{112 <= n <= 200}}
+
+For $112 \le n \le 200$, lower bounds on $a(n)$ were computed using
+two independent Metropolis--Hastings (MH) search methods:
+\begin{enumerate}[nosep]
+  \item \emph{Unconstrained MH} --- random bit-flip Markov chains on
+    the full space of $n$-bit strings, accepting moves that do not
+    decrease $f(s)$ ($10^5$ restarts, $10^5$ iterations each).
+  \item \emph{Constrained MH} --- chains restricted to a fixed
+    run-length template derived from empirical block-range
+    constraints, with $2 \times 10^5$ steps per chain across $8$
+    parallel chains.
+\end{enumerate}
+Both methods agreed on the best value for every~$n$ in this range.
+These results are certified lower bounds (since $f(s)$ is evaluated
+exactly), but are not proved to be exact values of~$a(n)$; the
+agreement across independent methods is recorded as evidence only and
+is not used in any proof.
+
+\subsection{Large-scale certified lower bounds}
+
+For $n \ge 3{,}000$, a suffix-array-guided local search
+iteratively improves a single incumbent string by identifying and
+resolving the highest-LCP collisions via targeted single-bit swaps.
+Since $f(s)$ is computed exactly at every step, the final value is a
+rigorous lower bound on~$a(n)$.
+
+\begin{center}
+\begin{tabular}{rrl}
+  \toprule
+  $n$ & Lower bound on $a(n)$ & $a(n)/n^2 \ge$ \\
+  \midrule
+  $3{,}000$            & $4{,}261{,}266$                          & $0.4735$ \\
+  $10{,}000$           & $48{,}490{,}001$                         & $0.4849$ \\
+  $10^6$               & $498{,}396{,}662{,}200$                  & $0.4984$ \\
+  $10^9$               & $499{,}943{,}911{,}277{,}037{,}650$      & $0.49994$ \\
+  $2 \times 10^9$      & $1{,}999{,}841{,}302{,}297{,}432{,}600$  & $0.49996$ \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+The computation at $n = 2 \times 10^9$ scores a two-billion-bit
+string ($\approx 238$~MB as a NumPy array) using the DivSufSort
+suffix-array library~\cite{pydivsufsort}.
+
+\begin{remark}
+  Theorem~\ref{thm:quant-sharp} gives
+  $a(n)/n^2 \ge 1/2 - 13/(4\sqrt{n})$, which reaches $0.4875$ only at
+  $n = 14{,}400$.  The computational lower bounds substantially
+  exceed the theoretical bound at moderate~$n$, confirming that the
+  constant $13/4$ in the $n^{3/2}$ term is far from tight.
+\end{remark}
+
+% =======================================================================
+\section{Empirical observations and open problems}\label{sec:observations}
+% =======================================================================
+
+\subsection{Second differences}
+
+\begin{observation}\label{obs:dda}
+  In the certified data through $n \le 111$:
+  $\DDa(n) \in \{0, 1, 2\}$.  The value~$2$ occurs at
+  $n = 52$ and $n = 71$.  For heuristic values up to $n = 200$,
+  $\DDa(n) \in \{0, 1, 2\}$ continues to hold, with additional
+  occurrences of~$2$ at $n \in \{117, 157, 178, 191, 194\}$.
+\end{observation}
+
+Theorem~\ref{thm:convex} establishes $\DDa(n) \ge 0$.
+
+\begin{conjecture}\label{conj:dda}
+  $\DDa(n) \le 2$ for all $n \ge 1$.
+\end{conjecture}
+
+\subsection{The separator pattern}
+
+\begin{observation}\label{obs:seps}
+  The certified data show that, for every $8 \le n \le 111$, every
+  optimal $n$-bit string has first separator length~$1$.
+  The threshold is sharp: exhaustive enumeration for $n \le 7$ shows
+  that, for $n = 4,5,6,7$, some optimal strings have first separator
+  length greater than~$1$.
+
+  For all $81 \le n \le 111$ (the extension beyond Fuller's
+  computation), every optimal $n$-bit string has separator sequence
+  beginning $(1, 2, 1, 1, 1, 1, 1, 1)$.  The same pattern holds for
+  all best heuristic strings found through $n = 200$.
+\end{observation}
+
+Theorem~\ref{thm:sep2-collisions} gives a rigorous obstruction to
+equal adjacent separators: equal consecutive separators force
+$\min(b_i, b_{i+1}) \cdot \min(b_{i+1}, b_{i+2})$ collisions.
+For the first pair in the computed optima, these collisions are large
+enough to justify lengthening $s_2$ to~$2$; for later pairs, the
+adjacent blocks are too small to warrant the observed cost.
+
+\begin{conjecture}\label{conj:seps}
+  For every $n > 7$, every optimal $n$-bit string has first separator
+  length~$1$.  Moreover, for all sufficiently large~$n$, every optimal
+  $n$-bit string has separator sequence beginning
+  $(1, 2, 1, 1, 1, 1, 1, 1, \ldots)$.
+\end{conjecture}
+
+\subsection{Open problems}
+
+\begin{enumerate}[label=(\roman*)]
+  \item \textbf{Error term.}  The best proven bound gives
+    $a(n)/n^2 = 1/2 + O(n^{-1/2})$.  Can the error term be improved
+    to $O(n^{-\alpha})$ for some $\alpha > 1/2$?  Computational data
+    suggest $a(n) = n^2/2 - \Theta(n^{3/2})$.
+
+  \item \textbf{Separator structure.}  Prove or disprove
+    Conjecture~\ref{conj:seps}.
+
+  \item \textbf{Second differences.}  Prove $\DDa(n) \le 2$
+    (Conjecture~\ref{conj:dda}).
+
+  \item \textbf{Leading block.}  The empirical leading one-block
+    length satisfies $b_1 \approx 0.19\,n$.  The best proven upper
+    bound is $b_1 = O(n^{3/4})$
+    (Corollary~\ref{cor:Lbound}).  Close this gap.
+
+  \item \textbf{Density.}  The empirical ones-density is
+    $\approx 0.85$ for moderate~$n$.  The best proven lower bound is
+    $1 - O(n^{-1/4})$ (Proposition~\ref{prop:optimal-density}).
+    Prove a bound approaching $1 - O(n^{-1/2})$.
+
+  \item \textbf{Exact computation.}  Extend the certified exact range
+    beyond $n = 111$.
+
+  \item \textbf{Alphabet generalisation.}
+    For an alphabet $\{0,\ldots,q{-}1\}$, define $a_q(n)$ analogously.
+    We have $a_q(n)/n^2 \to 1/2$ for every $q \ge 2$: the upper
+    bound $a_q(n) \le n(n{+}1)/2$ is alphabet-independent, and
+    restricting to the sub-alphabet $\{0,\,q{-}1\}$ reduces to
+    the binary case, giving
+    $a_q(n) \ge a_2(n) \ge n^2/2 - O(n^{3/2})$.
+    The deficit $n(n{+}1)/2 - a_q(n)$ appears to shrink dramatically
+    for $q \ge 3$ (roughly $O(n \log n)$ versus $\Theta(n^{3/2})$
+    for $q = 2$), since short-substring collisions vanish once the
+    alphabet exceeds~$2$.  Determining the precise deficit order for
+    $q \ge 3$ remains open.
+\end{enumerate}
+
+% =======================================================================
+\section*{Acknowledgements}
+% =======================================================================
+
+The author thanks Martin Fuller for the original A$^*$ certification of
+$a(n)$ for $n \le 80$~\cite{oeis}.  All computations were performed with
+Python~3.13 using the \texttt{numpy}~\cite{numpy},
+\texttt{numba}~\cite{numba}, and
+\texttt{pydivsufsort}~\cite{pydivsufsort} libraries.
+
+% =======================================================================
+\begin{thebibliography}{9}
+
+\bibitem{oeis}
+  OEIS Foundation Inc.,
+  \emph{The On-Line Encyclopedia of Integer Sequences},
+  Sequence A112509,
+  \url{https://oeis.org/A112509}, 2026.
+  Values for $n \le 80$ certified by an A$^*$ search of M.~Fuller and
+  updated in the OEIS log in 2025.
+
+\bibitem{kasai2001}
+  T.~Kasai, G.~Lee, H.~Arimura, S.~Arikawa, and K.~Park,
+  \emph{Linear-time longest-common-prefix computation in suffix
+  arrays and its applications},
+  in Proceedings of CPM 2001, LNCS 2089, Springer, 2001,
+  pp.~181--192.
+
+\bibitem{pydivsufsort}
+  L.~Abraham,
+  \texttt{pydivsufsort}: Python bindings for DivSufSort,
+  \url{https://github.com/louisabraham/pydivsufsort}, 2023.
+
+\bibitem{numpy}
+  C.~R.~Harris et al.,
+  \emph{Array programming with NumPy},
+  Nature \textbf{585} (2020), 357--362.
+
+\bibitem{numba}
+  S.~K.~Lam, A.~Pitrou, and S.~Seibert,
+  \emph{Numba: A LLVM-based Python JIT compiler},
+  Proceedings of LLVM-HPC 2015, ACM, 2015.
+
+\bibitem{github}
+  B.~Clare,
+  \emph{A112509: computational exploration},
+  \url{https://github.com/axelsmagichammer/A112509}, 2026.
+
+\end{thebibliography}
+
+\end{document}

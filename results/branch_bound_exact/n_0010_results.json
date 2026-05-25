@@ -1,0 +1,35 @@
+{
+  "a(n)": 33,
+  "num_optimal": 5,
+  "optimal_strings": [
+    "1111011001",
+    "1111011000",
+    "1111101001",
+    "1111101000",
+    "1111101100"
+  ],
+  "K_common": 1,
+  "common_seps": [
+    1
+  ],
+  "meta": {
+    "n": 10,
+    "preset": "stable",
+    "lookahead": 2,
+    "collect_all": true,
+    "requested_workers": 0,
+    "resolved_workers": 15,
+    "split_depth": 0,
+    "hard_split_gap": 5,
+    "hard_split_extra": 7,
+    "dfs_lookahead": 0,
+    "dfs_refine_lookahead": 0,
+    "dfs_refine_margin": 2,
+    "probe_nodes": 0,
+    "max_nodes_per_task": 0,
+    "nodes_expanded": 3,
+    "nodes_pruned": 0,
+    "num_subtrees": 3,
+    "elapsed_s": 7.73
+  }
+}

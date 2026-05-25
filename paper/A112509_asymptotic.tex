@@ -190,7 +190,7 @@ so $a(2)=3=2\cdot3/2$.
 \begin{lemma}[Decreasing partition]\label{lem:partition}
 Let $k\ge2$ and $M\ge k(k+1)/2$.  Then there exist strictly decreasing
 positive integers $b_1>b_2>\cdots>b_k\ge1$ with $\sum_{i=1}^k b_i=M$.
-Moreover, they may be chosen with $|b_i-M/k|\le k$ for all $i$.
+Moreover, they may be chosen with $|b_i-M/k|\le(k+1)/2$ for all $i$.
 \end{lemma}
 
 \begin{proof}
@@ -262,8 +262,8 @@ every second-case term satisfies $q\le b_i=q+k-i\le q+k-r-1<q+k$.
 So all $b_i\in[q,\,q+k]$.
 From the floor definition, $M/k\in[q+(k-1)/2,\;q+(k+1)/2)$,
 and the width of $[q,q+k]$ around any point in this interval is at most
-$(k+1)/2<k$ in each direction.
-Hence $|b_i-M/k|<k$ for all~$i$.
+$(k+1)/2$ in each direction.
+Hence $|b_i-M/k|\le(k+1)/2$ for all~$i$.
 \end{proof}
 
 \subsection{Parameters and string}
@@ -397,6 +397,379 @@ $a(n)$, and carries no information.  The bound is meaningful only for
 $n\ge900$; for small~$n$ the exact values from computational search
 (Table~\ref{tab:evidence}) give much sharper information.
 \end{remark}
+
+\subsection{Sharper quantitative lower bound}\label{sec:quant-sharp}
+
+The constant $15$ in Theorem~\ref{thm:quant} is an artefact of the
+parameter choice $k=\lfloor\sqrt n/4\rfloor$.  Choosing instead
+$k=\lceil\sqrt n\,\rceil$, together with a slightly sharper bound on
+the variance of the partition produced by Lemma~\ref{lem:partition},
+reduces the constant by a factor of $60/13>4.6$, and makes the bound
+non-trivial already at $n=36$ rather than $n=900$.
+
+\begin{theorem}[Sharper quantitative lower bound]\label{thm:quant-sharp}
+For every $n\ge 36$,
+\[
+  a(n)\;\ge\;\frac{n^2}{2}-\frac{13}{4}\,n^{3/2}.
+\]
+\end{theorem}
+
+\begin{remark}\label{rem:quant-sharp-comparison}
+Comparison with Theorem~\ref{thm:quant}:
+\begin{itemize}[nosep]
+  \item The new bound is positive iff $\sqrt n>13/2$, i.e.\ $n\ge 43$,
+    while the old bound is positive only for $n\ge 901$.  Thus the
+    threshold beyond which the bound is informative drops by a factor
+    of more than~$20$.
+  \item The constant in front of $n^{3/2}$ improves from $15$ to
+    $13/4$, a factor of $60/13>4.6$.  In fact the construction
+    achieves a constant of $\sqrt 6+o(1)\approx 2.449$
+    (Remark~\ref{rem:quant-optimal} below); we keep $13/4$ here
+    because it admits a fully symbolic and elementary proof.
+\end{itemize}
+A numerical comparison at sample $n$ (with $a(n)$ taken from
+the OEIS b-file b112509):
+\begin{center}\small
+  \begin{tabular}{r r r r}
+    \toprule
+    $n$    & Thm.~\ref{thm:quant} & Thm.~\ref{thm:quant-sharp} & $a(n)$ \\
+    \midrule
+    $36$   & $-2790$   & $-54$   & $450$ \\
+    $50$   & $-3050$   & $101$   & $899$ \\
+    $100$  & $-10000$  & $1750$  & $3875$ \\
+    $150$  & $-16320$  & $5278$  & $9070$ \\
+    $1000$ & $-237201$ & $397214$ & --- \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\end{remark}
+
+\begin{proof}[Proof of Theorem~\ref{thm:quant-sharp}]
+The construction~\eqref{eq:string} and Lemmas~\ref{lem:partition} and
+\ref{lem:inject} are unchanged.  Only the parameter choice and the
+estimation of the loss terms in~\eqref{eq:expand} differ.
+
+\smallskip\noindent\textit{Parameter.}  Set
+$k=\lceil\sqrt n\,\rceil$ and $M=n-k+1$.  Then
+$\sqrt n\le k\le\sqrt n+1$.
+
+\smallskip\noindent\textit{Lemma~\ref{lem:partition} applies for
+$n\ge 36$.}  We need $k\ge 2$ (clear) and $M\ge k(k+1)/2$.  The
+latter is equivalent to $n-\sqrt n\ge\tfrac12(\sqrt n+1)(\sqrt n+2)
+=\tfrac{n}{2}+\tfrac{3\sqrt n}{2}+1$ (using $k\le\sqrt n+1$), i.e.\
+$\tfrac{n}{2}\ge\tfrac{5\sqrt n}{2}+1$, which holds for
+$\sqrt n\ge 6$, i.e.\ $n\ge 36$.
+
+\smallskip\noindent\textit{Variance bound.}
+By Lemma~\ref{lem:partition}, every $b_i$ lies in $[q,q+k]$ where
+$q=\lfloor M/k\rfloor$.  Since $\sum_{i=1}^k(b_i-M/k)=0$ and each
+deviation has absolute value at most $k/2+1\le(k+1)/2$
+(because $b_i\in\{q,\ldots,q+k\}$ and the average is $M/k\in[q,q+k]$),
+\begin{equation}\label{eq:sumsq-sharp}
+  \sum_{i=1}^k b_i^2
+  \;=\;\frac{M^2}{k}+\sum_{i=1}^k\!\Bigl(b_i-\tfrac{M}{k}\Bigr)^{\!2}
+  \;\le\;\frac{M^2}{k}+k\cdot\frac{(k+1)^2}{4}.
+\end{equation}
+By the AM--GM inequality
+$2b_ib_{i+1}\le b_i^2+b_{i+1}^2$,
+\begin{equation}\label{eq:adjprod-sharp}
+  \sum_{i=1}^{k-1}b_ib_{i+1}
+  \;\le\;\sum_{i=1}^k b_i^2
+  \;\le\;\frac{M^2}{k}+\frac{k(k+1)^2}{4}.
+\end{equation}
+Substituting~\eqref{eq:sumsq-sharp} and~\eqref{eq:adjprod-sharp}
+into~\eqref{eq:expand}:
+\begin{align*}
+  a(n)
+  &\;\ge\;\frac{M^2-\sum b_i^2}{2}-\sum_{i=1}^{k-1}b_ib_{i+1} \\
+  &\;\ge\;\frac{M^2}{2}-\frac{1}{2}\!\left(\frac{M^2}{k}+\frac{k(k+1)^2}{4}\right)
+        -\!\left(\frac{M^2}{k}+\frac{k(k+1)^2}{4}\right) \\
+  &\;=\;\frac{M^2}{2}-\frac{3M^2}{2k}-\frac{3k(k+1)^2}{8}.
+\end{align*}
+
+\smallskip\noindent\textit{Term-by-term estimates.}
+Using $\sqrt n\le k\le\sqrt n+1$ and $M=n-k+1$:
+\begin{enumerate}[label=(\roman*),nosep]
+\item $\dfrac{M^2}{2}\ge\dfrac{(n-\sqrt n)^2}{2}
+  =\dfrac{n^2}{2}-n^{3/2}+\dfrac{n}{2}$.
+\item $\dfrac{3M^2}{2k}\le\dfrac{3n^2}{2\sqrt n}=\dfrac{3}{2}n^{3/2}$.
+\item Expanding $(\sqrt n+1)(\sqrt n+2)^2=n^{3/2}+5n+8\sqrt n+4$
+  gives
+  \[
+    \frac{3k(k+1)^2}{8}
+    \;\le\;\frac{3(\sqrt n+1)(\sqrt n+2)^2}{8}
+    \;=\;\frac{3}{8}n^{3/2}+\frac{15}{8}n+3\sqrt n+\frac{3}{2}.
+  \]
+\end{enumerate}
+Combining (i)--(iii):
+\begin{align}
+  a(n)
+  &\;\ge\;\frac{n^2}{2}-n^{3/2}+\frac{n}{2}
+        -\frac{3}{2}n^{3/2}
+        -\frac{3}{8}n^{3/2}-\frac{15}{8}n-3\sqrt n-\frac{3}{2}
+        \nonumber\\
+  &\;=\;\frac{n^2}{2}-\frac{23}{8}n^{3/2}-\frac{11}{8}n-3\sqrt n-\frac{3}{2}.
+        \label{eq:lb-allterms}
+\end{align}
+
+\smallskip\noindent\textit{Tail bound.}  We claim
+\begin{equation}\label{eq:tail}
+  \frac{11}{8}n+3\sqrt n+\frac{3}{2}\;\le\;\frac{3}{8}n^{3/2}
+  \qquad(n\ge 36).
+\end{equation}
+Equivalently $11n+24\sqrt n+12\le 3n^{3/2}$.  At $n=36$ the right
+side equals $3\cdot 216=648$ and the left side equals
+$396+144+12=552$, so the inequality holds at $n=36$ with margin
+$96$.  Differentiating, $\tfrac{d}{dn}(3n^{3/2}-11n-24\sqrt n-12)
+=\tfrac{9}{2}\sqrt n-11-\tfrac{12}{\sqrt n}$, which is positive for
+$n\ge 36$ since $\tfrac{9}{2}\cdot 6-11-2=14>0$ and the
+derivative is monotone increasing.  Therefore the inequality holds
+for all $n\ge 36$.
+
+Combining~\eqref{eq:lb-allterms} and~\eqref{eq:tail},
+\[
+  a(n)\;\ge\;\frac{n^2}{2}-\frac{23}{8}n^{3/2}-\frac{3}{8}n^{3/2}
+       \;=\;\frac{n^2}{2}-\frac{26}{8}n^{3/2}
+       \;=\;\frac{n^2}{2}-\frac{13}{4}n^{3/2}. \qedhere
+\]
+\end{proof}
+
+\begin{remark}\label{rem:quant-optimal}
+The constant $13/4$ is not optimal.  Tracking the variance of the
+partition more carefully (it is bounded by $k(k^2-1)/12+O(k)$ rather
+than $k(k+1)^2/4$) and choosing $k=\lceil\sqrt{3n/2}\,\rceil$ instead
+of $\lceil\sqrt n\,\rceil$ yields
+\[
+  a(n)\;\ge\;\frac{n^2}{2}-\sqrt 6\,n^{3/2}+O(n),
+\]
+with $\sqrt 6\approx 2.449$.  The choice $k=\lceil\sqrt{3n/2}\,\rceil$
+is the one that equates the two leading $n^{3/2}$ losses $kn$ and
+$3n^2/(2k)$ in the proof above.  We do not record the technical
+details since they would obscure the elementary nature of
+Theorem~\ref{thm:quant-sharp}.
+\end{remark}
+
+\begin{corollary}\label{cor:rate-sharp}
+For all $n\ge 36$, $\;a(n)/n^2\;=\;\tfrac12+O(n^{-1/2})$ with explicit
+constants:
+\(
+  \tfrac12-\tfrac{13}{4}n^{-1/2}\;\le\; a(n)/n^2\;\le\;\tfrac12+\tfrac{1}{2n}.
+\)
+\end{corollary}
+
+\section{A structural constraint on optima}\label{sec:structure}
+
+In this section we prove a rigorous upper bound on $f(s)$ in terms
+of the run-length statistics of $s$.  The bound is universal: it
+holds for \emph{every} binary string and is tight enough to force
+quantitative structural constraints on every optimum of $a(n)$.
+
+\subsection{Run-length notation}
+
+For $s\in\{0,1\}^n$, write its \emph{run decomposition}
+\[
+  s\;=\;a^{r_1}\,\bar a^{r_2}\,a^{r_3}\,\cdots
+\]
+where $a\in\{0,1\}$ is the leading symbol and the maximal runs have
+lengths $r_1,r_2,\ldots$ alternating between $a$ and~$\bar a$.  Let
+$\ell_1,\ldots,\ell_p$ denote the lengths of the $1$-runs and
+$m_1,\ldots,m_q$ the lengths of the $0$-runs (so
+$p+q\le n+1$ and $\sum\ell_t+\sum m_t=n$).  Set
+\[
+  L(s)=\max_t\ell_t,\qquad K(s)=\max_t m_t,
+\]
+the \emph{longest $1$-run} and \emph{longest $0$-run} respectively
+(with the convention $L(s)=0$ if $s$ contains no $1$s, and
+$K(s)=0$ if $s$ contains no $0$s).
+
+\subsection{The run-length frequency bound}
+
+We work with two versions of the bound: a tighter \emph{asymmetric}
+form involving only the longest $1$-run, and a slightly looser
+\emph{symmetric} form that lets us simultaneously control both the
+longest $1$-run and the longest $0$-run.
+
+\begin{theorem}[Run-length frequency bound, asymmetric]\label{thm:rlf}
+Every $s\in\{0,1\}^n$ satisfies
+\begin{equation}\label{eq:rlf}
+  f(s)\;\le\;1+L(s)+\binom{n+1}{2}
+        -\sum_{t=1}^{p}\binom{\ell_t+1}{2}
+        -\sum_{t=1}^{q}\binom{m_t+1}{2}.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Recall $f(s)=|V(s)|$, where $V(s)\subseteq\mathbb Z_{\ge 0}$ is the
+set of integer values represented by substrings of $s$, with the
+empty substring contributing the value $0$.  Partition
+\begin{equation}\label{eq:partition}
+  V(s)\;=\;\{0\}\,\cup\,V_1(s)\,\cup\,V_{\mathrm m}(s),
+\end{equation}
+where $V_1(s)$ is the set of values represented by some all-$1$
+substring of $s$ (necessarily $\ne 0$), and
+$V_{\mathrm m}(s):=V(s)\setminus(\{0\}\cup V_1(s))$ collects the
+remaining values.  This is a disjoint union: $0\notin V_1$ since
+every length-$\ge 1$ all-$1$ substring has value $2^j-1\ge 1$, and
+$V_{\mathrm m}$ is defined to be disjoint from the other two sets.
+
+\smallskip\noindent\textit{Counting $V_1(s)$.}
+A nonempty substring of the form $0^a 1^j$ ($a\ge 0$, $j\ge 1$) has
+integer value $2^j-1$, depending only on $j$.  Hence
+$V_1(s)=\{2^j-1:1\le j\le L(s)\}$ and $|V_1(s)|=L(s)$.
+
+\smallskip\noindent\textit{Counting $V_{\mathrm m}(s)$.}
+Every value in $V_{\mathrm m}(s)$ is represented by at least one
+substring, and that substring must contain both a $0$ and a $1$:
+otherwise it would be a power of $2$ minus one (hence in $V_1$) or
+zero.  Therefore $|V_{\mathrm m}(s)|$ is bounded above by the number
+of pairs $(i,j)$ with $1\le i\le j\le n$ such that
+$s_i\cdots s_j$ contains both symbols.  This count equals
+$\binom{n+1}{2}$ minus the number of $(i,j)$ for which
+$s_i\cdots s_j$ is all-$1$ or all-$0$.  A pair $(i,j)$ yields an
+all-$1$ substring iff $\{i,\ldots,j\}$ is contained in some maximal
+$1$-run, and the number of such pairs within a run of length
+$\ell$ is $\binom{\ell+1}{2}$.  Summing over $1$-runs and $0$-runs,
+\[
+  |V_{\mathrm m}(s)|\;\le\;
+  \binom{n+1}{2}-\sum_{t=1}^{p}\binom{\ell_t+1}{2}
+                -\sum_{t=1}^{q}\binom{m_t+1}{2}.
+\]
+Combining with $|V_1(s)|=L(s)$ via~\eqref{eq:partition}
+gives~\eqref{eq:rlf}.
+\end{proof}
+
+\begin{remark}\label{rem:rlf-tight}
+Inequality~\eqref{eq:rlf} has been verified to hold with strictly
+positive slack for every optimal string in our database
+($1\le n\le 150$, totalling $21\,072$ optima).  At sample~$n$ the
+slack $\mathrm{RHS}-a(n)$ behaves like:
+\begin{center}\small
+\begin{tabular}{r r r r r r r r}
+\toprule
+$n$ & 10 & 30 & 50 & 80 & 100 & 130 & 150 \\
+\midrule
+slack & 7 & 77 & 176 & 436 & 614 & 965 & 1\,241 \\
+\bottomrule
+\end{tabular}
+\end{center}
+matching the predicted $\Theta(n^{3/2})$ scaling
+of the gap $\binom{n+1}{2}-a(n)$.  The bound becomes equality when
+every pair $(i,j)$ yielding a mixed substring gives an integer value
+not already counted; this fails for long $s$ because of the
+leading-zero collision $0^a 1^j 0^b\sim 1^j 0^b$.
+\end{remark}
+
+\subsection{Forced run-length statistics at any optimum}
+
+\begin{corollary}[Concentration of run lengths]\label{cor:concentration}
+Let $s$ be any optimum for $a(n)$ with run lengths
+$\ell_1,\ldots,\ell_p,m_1,\ldots,m_q$ as above and longest
+$1$-run $L=L(s)$.  Then for all $n\ge 36$,
+\begin{equation}\label{eq:concentration}
+  \sum_{t=1}^{p}\binom{\ell_t+1}{2}
+  +\sum_{t=1}^{q}\binom{m_t+1}{2}
+  \;\le\;\frac{13}{4}\,n^{3/2}+\frac{n}{2}+L+1.
+\end{equation}
+\end{corollary}
+
+\begin{proof}
+Apply Theorem~\ref{thm:rlf} with $f(s)=a(n)$ and rearrange:
+\[
+  \sum_t\binom{\ell_t+1}{2}+\sum_t\binom{m_t+1}{2}
+  \;\le\;\binom{n+1}{2}+1+L-a(n).
+\]
+Using $\binom{n+1}{2}=\tfrac{n^2}{2}+\tfrac{n}{2}$ and the lower
+bound $a(n)\ge\tfrac{n^2}{2}-\tfrac{13}{4}n^{3/2}$ of
+Theorem~\ref{thm:quant-sharp},
+$\binom{n+1}{2}-a(n)\le\tfrac{n}{2}+\tfrac{13}{4}n^{3/2}$, giving
+\eqref{eq:concentration}.
+\end{proof}
+
+\begin{corollary}[Forced upper bound on the longest $1$-run]\label{cor:Lbound}
+For every $n\ge 36$ and every optimum $s$ for $a(n)$,
+\begin{equation}\label{eq:Lbound}
+  \binom{L(s)+1}{2}
+  \;\le\;\frac{13}{4}\,n^{3/2}+\frac{n}{2}+L(s)+1,
+\end{equation}
+hence
+$L(s)\;\le\;\sqrt{\tfrac{13}{2}}\;n^{3/4}+O(n^{3/8})\;=\;O(n^{3/4})$.
+\end{corollary}
+
+\begin{proof}
+The longest $1$-run contributes $\binom{L+1}{2}$ to the left-hand
+side of~\eqref{eq:concentration}; all other terms are non-negative,
+giving~\eqref{eq:Lbound}.  Since $\binom{L+1}{2}\ge L^2/2$, the
+inequality forces $L^2/2\le\tfrac{13}{4}n^{3/2}+L+\tfrac{n}{2}+1$.
+Solving and absorbing lower-order terms,
+$L\le\sqrt{13/2}\,n^{3/4}+O(n^{3/8})$.
+\end{proof}
+
+\subsection{A symmetric bound and the longest $0$-run}
+
+The argument above privileges $1$-substrings because the empty
+substring shares the value $0$ with every all-$0$ substring,
+making the all-$0$ substrings ``invisible'' to $f$.  By treating
+$0$-substrings on equal footing one obtains a slightly looser
+bound that controls both the longest $1$-run and the longest
+$0$-run.
+
+\begin{theorem}[Run-length frequency bound, symmetric]\label{thm:rlf-sym}
+Every $s\in\{0,1\}^n$ satisfies
+\begin{equation}\label{eq:rlf-sym}
+  f(s)\;\le\;1+L(s)+K(s)+\binom{n+1}{2}
+        -\sum_{t=1}^{p}\binom{\ell_t+1}{2}
+        -\sum_{t=1}^{q}\binom{m_t+1}{2}.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Inequality~\eqref{eq:rlf-sym} follows immediately from
+Theorem~\ref{thm:rlf} since $K(s)\ge 0$.
+\end{proof}
+
+\begin{corollary}[Forced upper bound on the longest $0$-run]\label{cor:Kbound}
+For every $n\ge 36$ and every optimum $s$ for $a(n)$,
+\[
+  \binom{K(s)+1}{2}
+  \;\le\;\frac{13}{4}\,n^{3/2}+\frac{n}{2}+L(s)+K(s)+1,
+\]
+hence $K(s)=O(n^{3/4})$.
+\end{corollary}
+
+\begin{proof}
+Apply Theorem~\ref{thm:rlf-sym} and rearrange exactly as in the
+proof of Corollary~\ref{cor:concentration}, retaining the
+$\binom{K+1}{2}$ term on the left-hand side and dropping the
+non-negative remaining run terms.
+\end{proof}
+
+\subsection{Empirical refinement}
+
+It is tempting to conjecture that the leading $1$-run length $b_1(n)$
+of an optimum is monotone non-decreasing in $n$.  This is
+\emph{false}: in the database of all optima for $1\le n\le 150$ we
+find exactly three values of $n$ at which the minimum leading
+$1$-run length \emph{decreases}, namely
+\[
+  b_1(51)=12<b_1(50)=13,\quad
+  b_1(71)=15<b_1(70)=16,\quad
+  b_1(116)=20<b_1(115)=21.
+\]
+However the slightly weaker monotonicity
+\[
+  \min_{s\in S_n}b_1(s)\;\ge\;\min_{s\in S_{n-4}}b_1(s)
+\]
+holds for every $n\le 150$ in our database, where $S_n$ is the set of
+optima for length~$n$.  We do not have a proof of this gap-$4$
+monotonicity; the run-length frequency
+bound~\eqref{eq:rlf} only constrains $L(s)=O(n^{3/4})$ from above
+and is silent on monotonicity.
+
+The construction of \S\ref{sec:construction} achieves leading
+$1$-run length $b_1=q+k=\Theta(\sqrt n)$, well below the
+information-theoretic upper bound $O(n^{3/4})$ of
+Corollary~\ref{cor:Lbound}.  Whether every optimum satisfies
+$b_1(s)=\Theta(\sqrt n)$ (as the data suggest) is an open problem.
 
 \section{Density of ones}\label{sec:density}
 
