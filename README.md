@@ -720,7 +720,7 @@ The following open problems are suggested by the computational findings.
 
 This project spanned several months of active research and consumed thousands of hours of CPU time across multiple machines. What began as a straightforward brute force exploration of the sequence grew into a layered computational investigation requiring increasingly sophisticated algorithms at each scale barrier.
 
-The work was carried out with substantial assistance from **Claude Sonnet 4.6** and **Claude Opus 4.6** (Anthropic). These AI systems contributed throughout the project with performance optimisation: identifying bottlenecks and profiling, and code implementation: writing, debugging and iterating on all major modules, test suites, and analysis tools.
+The work was carried out with assistance from **Claude Sonnet 4.6** and **Claude Opus 4.6** (Anthropic). These AI systems contributed throughout the project with performance optimisation: identifying bottlenecks and profiling.
 
 ### Algorithm Evolution
 
@@ -728,7 +728,7 @@ The pipeline was not designed upfront, it evolved iteratively as each approach h
 
 1. **Brute force**: exhaustive enumeration of all 2^(n−1) strings worked to n ≈ 40 but was computationally intractable beyond that.
 
-2. **Block structure discovery**: manual inspection of brute force solutions revealed the run length pattern. This motivated the structured search heuristic. It agrees with all certified exact values less than n = 112, but it does not by itself prove global optimality.
+2. **Block structure discovery**: manual inspection of brute force solutions revealed the run length pattern. This motivated the structured search heuristic. It agrees with all certified exact values less than n = 112, but it does not by itself prove global optimality as the whole search space is not searched.
 
 3. **Suffix array scoring**: as n grew past 30, the O(n²) substring hash set became the bottleneck. The key insight that distinct positive integer values equal distinct leading 1 suffixes in the suffix array, countable via the LCP array, reduced scoring from O(n²) to O(n log n).
 
