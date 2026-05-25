@@ -1,12 +1,12 @@
-# OEIS A112509 — Maximum Distinct Integers from Binary Substrings
+# OEIS A112509: Maximum Distinct Integers from Binary Substrings
 
-> **A112509(n)** = the maximum number of distinct non-negative integers whose binary representations occur as contiguous substrings of some n-bit binary string.
+> **A112509(n)** = the maximum number of distinct nonnegative integers whose binary representations occur as contiguous substrings of some binary string of length n.
 
-This repository contains algorithms, analysis tools, and pre-computed data for exploring [OEIS sequence A112509](https://oeis.org/A112509) and six related sequences. Exact proven values extend from n = 80 (Martin Fuller, OEIS) to **n = 111** via branch-and-bound, with heuristic lower bounds computed up to **n = 2 billion**.
+This repository contains algorithms, analysis tools, and precomputed data for exploring [OEIS sequence A112509](https://oeis.org/A112509) and six related sequences. Exact proven values are certified through **n = 111**: Martin Fuller's A* computation certifies n ≤ 80, and this project's branch and bound solver certifies n = 81 to 111. Beyond n = 111 the stored values are best known heuristic records or certified lower bounds for explicit strings, not proofs of optimality.
 
 ## The Problem
 
-Given an n-bit binary string, every contiguous substring can be read as a binary number (with leading zeros collapsing to 0). For example, the 4-bit string `1101` contains substrings:
+Given a binary string of length n, every contiguous substring can be read as a binary number (with leading zeros collapsing to 0). For example, the length 4 string `1101` contains substrings:
 
 | Length | Substrings | Integer values |
 | -------- | ----------- | ---------------- |
@@ -17,7 +17,7 @@ Given an n-bit binary string, every contiguous substring can be read as a binary
 
 Distinct values: {0, 1, 2, 3, 5, 6, 13} → **7 distinct integers**, which happens to be the maximum achievable for n = 4.
 
-A112509 asks: for each n, what is the **maximum** count of distinct integers achievable by any n-bit string?
+A112509 asks: for each n, what is the **maximum** count of distinct integers achievable by any binary string of length n?
 
 ## First 20 Values
 
@@ -30,29 +30,29 @@ a(n): 1   3   5   7  10  13  17  22  27  33  40  47  55  64  73  83  94 106 118 
 
 | Sequence | Description | Proven (a-file) | Best known (b-file) |
 | ---------- | ------------- | :-: | :-: |
-| **A112509** | Max distinct integers (including 0) from n-bit substrings | n = 1–111 | n = 1–200 |
-| **A112510** | Smallest n-bit number achieving A112509(n) | n = 1–111 | n = 1–150 |
-| **A112511** | Largest n-bit number achieving A112509(n) | n = 1–111 | n = 1–150 |
-| **A156022** | Max distinct *positive* integers from n-bit substrings | n = 1–111 | n = 1–200 |
-| **A156023** | n(n+1)/2 − A112509(n) (the "missing" count) | n = 1–111 | n = 1–200 |
-| **A156024** | n(n+1)/2 − A156022(n) (missing positive count) | n = 1–111 | n = 1–200 |
-| **A156025** | Number of n-bit strings achieving A112509(n) | n = 1–111 | n = 1–150 |
+| **A112509** | Max distinct integers, including 0, from length n binary substrings | n = 1 to 111 | n = 1 to 200 |
+| **A112510** | Smallest length n binary number achieving A112509(n) | n = 1 to 111 | n = 1 to 150 |
+| **A112511** | Largest length n binary number achieving A112509(n) | n = 1 to 111 | n = 1 to 150 |
+| **A156022** | Max distinct *positive* integers from length n binary substrings | n = 1 to 111 | n = 1 to 200 |
+| **A156023** | n(n+1)/2 − A112509(n), the missing count | n = 1 to 111 | n = 1 to 200 |
+| **A156024** | n(n+1)/2 − A156022(n), the missing positive count | n = 1 to 111 | n = 1 to 200 |
+| **A156025** | Number of length n binary strings achieving A112509(n) | n = 1 to 111 | n = 1 to 150 |
 
-The **a-files** (`data/oeis/a*.txt`) contain only rigorously proven values (Fuller n ≤ 80, branch-and-bound n = 81–111). The **b-files** (`data/oeis/b*.txt`) additionally include best-known heuristic values beyond the proven range. The b-file format permits best-known values.
+The **a files** (`data/oeis/a*.txt`) contain only rigorously proven values (Fuller n ≤ 80, branch and bound n = 81 to 111). The **b files** (`data/oeis/b*.txt`) additionally include best known heuristic values beyond the proven range. The b file format permits best known values.
 
 ## Key Findings
 
-- **Asymptotic growth**: lim a(n)/n² = 1/2 (proved — see [Clare (2026)](paper/A112509_asymptotic.pdf))
+- **Asymptotic growth**: lim a(n)/n² = 1/2 (proved; see [Clare (2026)](paper/A112509_asymptotic.pdf))
 - **Quantitative lower bound**: a(n) ≥ n²/2 − 15n^{3/2} for all n ≥ 64 (proved, explicit constant)
-- **Ones-density (near-optimal)**: explicit near-optimal strings have ones-density 1 − O(n^{−1/2}) (proved)
-- **Ones-density (optimal)**: every optimal string has ones-density 1 − O(n^{−1/4}) (proved)
-- **Zero-count penalty**: any z zeros impose a penalty ≥ z(z+1)/2 on f(s) relative to the upper bound (proved)
+- **Ones density for near optimal strings**: explicit near optimal strings have ones density 1 − O(n^{−1/2}) (proved)
+- **Ones density for optimal strings**: every optimal string has ones density 1 − O(n^{−1/4}) (proved)
+- **Zero count penalty**: any z zeros impose a penalty ≥ z(z+1)/2 on f(s) relative to the upper bound (proved)
 - **Fragmentation penalty**: if the z zeros form m separate runs, the additional penalty is ≥ C(m, 2) (proved)
-- **Optimal string structure**: all optimal strings start with a long block of 1s, followed by decreasing 1-blocks separated by short 0-blocks, and the zero-separator prefix always begins `[1, 2, 1, ...]` and grows with n (K_common ≈ 3 at n = 30, 8 at n = 81–103, 14 at n = 150)
-- **De Bruijn connection**: the minimum de Bruijn order k for an optimal string equals its leading 1-block length (proved for all n ≤ 150)
+- **Structure in certified optima**: the optimal strings certified through n = 111 start with a long block of 1s, followed by decreasing 1 blocks separated by short 0 blocks. Their common zero separator prefix begins `[1, 2, 1, ...]` and grows with n. Best known heuristic strings beyond n = 111 continue the same pattern.
+- **De Bruijn connection**: for certified optima through n = 111, the minimum de Bruijn order k matches the leading 1 block length. Best known heuristic records beyond n = 111 continue to support this pattern, but do not prove it.
 - **Lower bounds at scale**: a(1,000,000,000) ≥ 499,943,911,277,037,650
-- **Second differences**: Δ²a(n) = Δa(n) − Δa(n−1) ∈ {0, 1, 2} for all n ≤ 200; the value 2 occurs at exactly n = 52, 71, 117, 157, 178, 191, 194
-- **Optimal string structure detail**: the leading 1-block length equals the minimum de Bruijn order; 1-block sizes scale approximately linearly with n (α₁ ≈ 0.19n, α₂ ≈ 0.17n, ...); overall 1-density tends to 1.
+- **Second differences**: Δ²a(n) = Δa(n) − Δa(n−1) ∈ {0, 1, 2} for the certified exact values through n = 111 and for the best known continuation through n = 200. In that continuation, the value 2 occurs at n = 52, 71, 117, 157, 178, 191, and 194.
+- **Heuristic structure detail**: leading 1 block lengths and later 1 block sizes in the best known strings scale approximately linearly with n, and the overall 1 density tends to 1.
 
 ## Elementary Bounds
 
@@ -82,7 +82,7 @@ Together these give 1/4 + O(1/n) ≤ a(n)/n² ≤ 1/2 + O(1/n). The elementary l
 
 > **Theorem** (Clare, 2026). lim a(n)/n² = 1/2.
 
-The proof constructs an explicit family of n-bit strings with strictly decreasing one-block lengths, achieving a(n) ≥ n²/2 − 15n^{3/2} for all n ≥ 64. The paper also proves that every optimal string has ones-density 1 − O(n^{−1/4}), and derives zero-count and zero-fragmentation penalties on f(s). See [A112509_asymptotic.pdf](paper/A112509_asymptotic.pdf) for the full proofs.
+The proof constructs an explicit family of length n binary strings with strictly decreasing one block lengths, achieving a(n) ≥ n²/2 − 15n^{3/2} for all n ≥ 64. The paper also proves that every optimal string has ones density 1 − O(n^{−1/4}), and derives zero count and zero fragmentation penalties on f(s). See [A112509_asymptotic.pdf](paper/A112509_asymptotic.pdf) for the full proofs.
 
 ## Asymptotic Numerical Evidence
 
@@ -96,18 +96,18 @@ The following certified lower bounds, computed using the surgical nudge algorith
 | 1,000,000,000 | 499,943,911,277,037,650 | 0.49994 |
 | 2,000,000,000 | 1,999,841,302,297,432,600 | 0.49996 |
 
-The computation at n = 2 × 10⁹ required scoring a two-billion-bit string (approximately 238 MB as a NumPy boolean array) using the `pydivsufsort` C library. The ratio a(n)/n² converges rapidly to the proved limit of 1/2 and is within 0.004% at n = 2 × 10⁹.
+The computation at n = 2 × 10⁹ required scoring a two billion bit string (approximately 238 MB as a NumPy boolean array) using the `pydivsufsort` C library. The ratio a(n)/n² converges rapidly to the proved limit of 1/2 and is within 0.004% at n = 2 × 10⁹.
 
-For exact values up to n = 150, the ratios are:
+For comparison, certified and best known medium n values give these ratios:
 
 ```text
 n=100: a(100)=3875,  a(n)/n²=0.3875
 n=120: a(120)=5684,  a(n)/n²=0.3947
 n=150: a(150)=9070,  a(n)/n²=0.4031
-n=200: a(200)=16535, a(n)/n²=0.4134
+n=200: a(200)=16536, a(n)/n²=0.4134
 ```
 
-These exact small-n values approach 0.5 more slowly than the large-n lower bounds because the sub-leading correction terms are significant at moderate n. Fitting a constrained log₂ tail model `a(n)/n² ≈ L − c/(log₂ n)^α` to the known data gives L ≈ 0.4997 with very tight confidence across multiple tail cutoffs, consistent with the limit being exactly 1/2.
+Only the entries through n = 111 are exact. The moderate n values approach 0.5 more slowly than the large n lower bounds because the subleading correction terms are significant. Fitting a constrained log₂ tail model `a(n)/n² ≈ L − c/(log₂ n)^α` to the certified and best known data gives L ≈ 0.4997 with very tight confidence across multiple tail cutoffs, consistent with the limit being exactly 1/2.
 
 ## Installation
 
@@ -149,18 +149,18 @@ pip install pydivsufsort
 A112509/
 ├── README.md                     ← you are here
 ├── requirements.txt              ← Python dependencies
-├── run_branch_bound.py           ← entry point: exact B&B solver
+├── run_branch_bound.py           ← entry point: exact branch and bound solver
 │
 ├── src/
 │   ├── algorithms/               ← core search algorithms
-│   │   ├── branch_bound_search.py    ← exact parallel B&B with SAM-based UB (~2900 lines)
+│   │   ├── branch_bound_search.py    ← exact parallel branch and bound with SAM based UB (~2900 lines)
 │   │   ├── brute_force.py            ← exact search for small n (≤ 25)
-│   │   ├── evaluate.py               ← O(n log²n) distinct-value counter
-│   │   ├── structured_search.py      ← block-template exhaustive search (n ≤ 150)
-│   │   ├── MH_algorithm.py           ← Metropolis-Hastings MCMC search (n ≤ 1000)
-│   │   ├── greedy_search.py          ← template-based greedy with learned prefixes
+│   │   ├── evaluate.py               ← O(n log²n) distinct value counter
+│   │   ├── structured_search.py      ← heuristic structural search, exact agreement for n < 112
+│   │   ├── MH_algorithm.py           ← probabilistic Metropolis Hastings MCMC search (n ≤ 1000)
+│   │   ├── greedy_search.py          ← template based greedy with learned prefixes
 │   │   ├── large_n_lower_bound.py    ← certified lower bounds for n ≥ 3,000
-│   │   └── surgical_nudge.py         ← LCP-targeted local refinement
+│   │   └── surgical_nudge.py         ← LCP targeted local refinement
 │   │
 │   └── tools/                    ← analysis and utility scripts
 │       ├── generate_oeis_bfiles.py   ← export to OEIS b-file format
@@ -175,37 +175,37 @@ A112509/
 │   └── search_constraints.json   ← per-n constraints for extended search
 │
 ├── data/
-│   ├── cached_results.json       ← authoritative results (n = 1–150)
-│   ├── oeis/                     ← OEIS a-files (proven) and b-files (best known)
+│   ├── cached_results.json       ← exact through n = 111, best known after that
+│   ├── oeis/                     ← OEIS a files (proven) and b files (best known)
 │   └── reference/
-│       ├── known_values.py       ← proven exact values (n = 1–110)
-│       └── A156025_values.py     ← optimal string counts (n = 1–80)
+│       ├── known_values.py       ← proven exact values used directly in the solver (n = 1 to 110)
+│       └── A156025_values.py     ← optimal string counts (n = 1 to 80)
 │
 ├── results/
-│   ├── branch_bound_exact/       ← proven B&B results (n = 5–111+)
-│   ├── mh_bounded/               ← constrained MH results (n = 81–200)
+│   ├── branch_bound_exact/       ← proven branch and bound results (n = 5 to 111+)
+│   ├── mh_bounded/               ← constrained MH results (n = 81 to 200)
 │   ├── mh_unbounded/             ← unconstrained MH results (n ≥ 80)
 │   ├── large_n/                  ← lower bounds (n = 3K to 2B)
 │   ├── distributions/            ← full distributions for n = 12, 16, 20
 │   ├── debruijn_analysis.json    ← de Bruijn embedding metadata
 │   └── hamming_distances.json    ← Hamming distance statistics
 │
-├── seeds/                        ← best-known bit-strings for large n
+├── seeds/                        ← best known bit strings for large n
 │
 ├── paper/                        ← LaTeX: asymptotic proof & analysis
 │
 ├── notebooks/
 │   ├── A112509_Extended_Results.ipynb   ← tables, charts, structural analysis
-│   └── A112509_Results_Comparison.ipynb ← cross-method agreement
+│   └── A112509_Results_Comparison.ipynb ← agreement between methods
 │
 └── tests/
 ```
 
 ---
 
-## Branch-and-Bound Exact Solver
+## Branch and Bound Exact Solver
 
-The branch-and-bound (B&B) solver is the primary tool for proving exact values of a(n). It exhaustively searches the space of all n-bit binary strings beginning with `1`, pruning branches whose upper bound cannot exceed the current best known value. The result is a mathematically rigorous proof that the returned value is optimal — not merely a heuristic estimate.
+The branch and bound (B&B) solver is the primary tool for proving exact values of a(n). It exhaustively searches the space of all length n binary strings beginning with `1`, pruning branches whose upper bound cannot exceed the current best known value. The result is a mathematically rigorous proof that the returned value is optimal, not merely a heuristic estimate.
 
 ### Quick Start
 
@@ -222,15 +222,15 @@ python run_branch_bound.py --n 112 --workers 8
 
 Results are saved to `results/branch_bound_exact/n_NNNN_results.json`.
 
-### Multi-Machine Sharding
+### Multi Machine Sharding
 
-For very large n, the search can be distributed across multiple machines via filesystem-based sharding:
+For very large n, the search can be distributed across multiple machines via filesystem based sharding:
 
 ```bash
 # Machine 1: enumerate tasks
 python run_branch_bound.py --n 120 --shard-mode coordinator
 
-# Machines 1–N: run workers (each claims tasks from shared directory)
+# Machines 1 to N: run workers (each claims tasks from shared directory)
 python run_branch_bound.py --n 120 --shard-mode worker --shard-dir /shared/path/
 
 # After all workers finish: merge results
@@ -242,12 +242,12 @@ python run_branch_bound.py --n 120 --shard-mode merge --shard-dir /shared/path/
 The solver operates in three phases:
 
 ```text
-Phase 1: BFS Split        Phase 2: Parallel DFS         Phase 2b: Tail Re-split
+Phase 1: BFS Split        Phase 2: Parallel DFS         Phase 2b: Tail Split
 ┌──────────────────┐      ┌───────────────────────┐      ┌─────────────────────┐
 │ Expand root to   │      │ Workers claim subtrees │      │ When few tasks left,│
-│ depth d, prune   │─────▶│ from queue and run     │─────▶│ re-split remaining  │
+│ depth d, prune   │─────▶│ from queue and run     │─────▶│ split remaining     │
 │ unpromising       │      │ iterative DFS with     │      │ tasks for load      │
-│ prefixes, split  │      │ SAM-based UB pruning   │      │ balancing            │
+│ prefixes, split  │      │ SAM based UB pruning   │      │ balancing            │
 │ hard subtrees    │      │ + shared incumbent     │      │                      │
 └──────────────────┘      └───────────────────────┘      └─────────────────────┘
 ```
@@ -256,28 +256,28 @@ Phase 1: BFS Split        Phase 2: Parallel DFS         Phase 2b: Tail Re-split
 
 Starting from the root prefix `(1,)`, BFS expands the search tree to a configurable split depth (auto-selected as approximately n/3, clamped to [10, 25]). At each level, children whose upper bound is below the current incumbent are pruned. The surviving leaf prefixes become independent DFS tasks.
 
-**Hard-subtree re-splitting:** Subtrees with upper bounds only slightly above the incumbent (within `hard_split_gap`, default 5) are classified as "hard" — they are unlikely to contain the optimum but cannot be pruned. These are expanded an additional `hard_split_extra` levels (default 7), breaking them into many fine-grained tasks that finish quickly and keep workers busy.
+**Hard subtree splitting:** Subtrees with upper bounds only slightly above the incumbent (within `hard_split_gap`, default 5) are classified as hard. They are unlikely to contain the optimum but cannot be pruned. These are expanded an additional `hard_split_extra` levels (default 7), breaking them into many fine grained tasks that finish quickly and keep workers busy.
 
-**Probe-based adaptive splitting** (optional): A shallow DFS probe can be run on each subtree to classify it as easy or hard based on behavioral metrics (prune rate, residual stack size). Hard tasks get deeper re-splitting; all tasks are priority-ranked so the most promising subtrees execute first.
+**Probe based adaptive splitting** (optional): A shallow DFS probe can be run on each subtree to classify it as easy or hard based on behavioural metrics (prune rate, residual stack size). Hard tasks get deeper splitting; all tasks are ranked by priority so the most promising subtrees execute first.
 
 #### Phase 2: Parallel DFS Workers
 
-Each task is an independent iterative DFS rooted at a BFS-frontier prefix. Workers run in parallel across all available CPU cores (default: `os.cpu_count() - 1`).
+Each task is an independent iterative DFS rooted at a BFS frontier prefix. Workers run in parallel across all available CPU cores (default: `os.cpu_count() - 1`).
 
 **Worker architecture:**
 
 - Each worker uses an **explicit LIFO stack** (not a heap), giving O(n²) memory and no risk of OOM.
-- Stack entries store `(prefix_bits, precomputed_ub)` — the upper bound is computed once at push time and rechecked against the (monotonically rising) incumbent at pop time.
+- Stack entries store `(prefix_bits, precomputed_ub)`. The upper bound is computed once at push time and rechecked against the monotonically rising incumbent at pop time.
 - The entire DFS inner loop is compiled to native machine code via **Numba JIT** (`@njit(nogil=True, cache=True)`).
-- A **shuttle thread** bridges `multiprocessing.Value` ↔ `numpy.int64[1]` every 0.2 seconds, allowing the GIL-free Numba code to poll the cross-process shared incumbent without Python overhead.
+- A **shuttle thread** bridges `multiprocessing.Value` ↔ `numpy.int64[1]` every 0.2 seconds, allowing Numba code that is free of the GIL to poll the cross process shared incumbent without Python overhead.
 
 **Shared incumbent:** A single `multiprocessing.Value('l')` holds the best score found by any worker. When one worker finds a better solution, all other workers see the update within 0.2 seconds and can prune more aggressively. This is critical for `collect_all=True` mode where workers must know the exact optimum to decide which strings to keep.
 
 **Cooperative chunking** (optional): If `max_nodes_per_task > 0`, a DFS worker that exceeds its node budget snapshots its remaining stack and returns. The orchestrator re-enqueues the snapshot entries as fresh tasks, ensuring no single subtree monopolises a worker for hours.
 
-#### Phase 2b: Tail Re-split
+#### Phase 2b: Tail Split
 
-When the number of remaining tasks drops below a threshold (~10% of the original count), every queued task is BFS-expanded 3 additional levels. This breaks stragglers into fine-grained work to keep all cores busy through the long tail. Up to 5 rounds of re-splitting can occur.
+When the number of remaining tasks drops below a threshold (~10% of the original count), every queued task is expanded by BFS for 3 additional levels. This breaks stragglers into fine grained work to keep all cores busy through the long tail. Up to 5 rounds of additional splitting can occur.
 
 ### Upper Bound Formula
 
@@ -291,65 +291,65 @@ UB_L(p) = max over all e in {0,1}^L of [ score(q) + a(m) + ones(q) × m − SAM_
 
 | Term | Meaning |
 | --- | --- |
-| score(q) | Exact distinct-value count of the (k+L)-bit prefix q, computed via the suffix automaton |
-| a(m) | Proven exact value for an m-bit string (from `known_values.py` + B&B results). When unknown, falls back to the loose bound n(n+1)/2 − (k+L)(k+L+1)/2 |
-| ones(q) × m | Upper bound on cross-boundary values: each `1`-bit in q can contribute at most m new distinct values via substrings that start in q and extend into the unknown suffix |
-| SAM_savings | Cross-boundary values provably already present in the suffix automaton of q (see below) |
+| score(q) | Exact distinct value count of the (k+L) bit prefix q, computed via the suffix automaton |
+| a(m) | Proven exact value for a length m binary string (from `known_values.py` + B&B results). When unknown, falls back to the loose bound n(n+1)/2 − (k+L)(k+L+1)/2 |
+| ones(q) × m | Upper bound on cross boundary values: each `1` bit in q can contribute at most m new distinct values via substrings that start in q and extend into the unknown suffix |
+| SAM_savings | Cross boundary values provably already present in the suffix automaton of q (see below) |
 
 **Additional tightening mechanisms:**
 
-- **Global UB cap**: a sequence-level upper bound derived from the maximum possible distinct values across all substring lengths.
-- **Parent-UB clamp**: `child_ub = min(child_ub, parent_ub)` — any descendant of a child is also a descendant of the parent, so the child's UB cannot exceed the parent's.
+- **Global UB cap**: a sequence level upper bound derived from the maximum possible distinct values across all substring lengths.
+- **Parent UB clamp**: `child_ub = min(child_ub, parent_ub)`. Any descendant of a child is also a descendant of the parent, so the child's UB cannot exceed the parent's.
 - **Exact tail**: when m ≤ 8 remaining bits, all 2^m completions are scored exactly instead of using the UB estimate.
-- **Structural pruning**: prefixes containing ≥2 consecutive zeros after the leading 1-block are pruned (provably suboptimal for n ≥ 8).
+- **Structural pruning**: prefixes containing ≥2 consecutive zeros after the leading 1 block are pruned (provably suboptimal for n ≥ 8).
 
-### Suffix Automaton (SAM) — Dual Role
+### Suffix Automaton (SAM): Dual Role
 
 The suffix automaton is used in two distinct ways:
 
 #### 1. Exact Scoring
 
-For a complete n-bit string, the SAM is built online (one character at a time) and the distinct-value count is computed via a topological subtree-sum on the `1`-child of the root:
+For a complete length n binary string, the SAM is built online (one character at a time) and the distinct value count is computed via a topological subtree sum on the `1` child of the root:
 
 ```text
 f(s) = subtree_count(t1[root]) + 𝟙[0 ∈ s]
 ```
 
-This counts all distinct substrings starting with `1` (each corresponding to a unique positive integer), plus 1 for the value 0 if any `0`-bit exists.
+This counts all distinct substrings starting with `1` (each corresponding to a unique positive integer), plus 1 for the value 0 if any `0` bit exists.
 
 #### 2. Upper Bound Computation (SAM Savings)
 
-When computing the UB for a prefix q, the SAM is used to tighten the cross-boundary estimate. For each `1`-bit at position i in q, the suffix starting there can produce substrings that extend into the unknown suffix. Some of these extensions are guaranteed to already exist in the SAM of q regardless of what the suffix contains:
+When computing the UB for a prefix q, the SAM is used to tighten the cross boundary estimate. For each `1` bit at position i in q, the suffix starting there can produce substrings that extend into the unknown suffix. Some of these extensions are guaranteed to already exist in the SAM of q regardless of what the suffix contains:
 
-1. Walk the suffix-link chain to find the SAM state representing the suffix of q starting at position i.
+1. Walk the suffix link chain to find the SAM state representing the suffix of q starting at position i.
 2. BFS from that state up to JMAX steps (2 for base UB, 3 for refined UB): check whether all 2^j possible j-step continuations exist as transitions in the SAM.
-3. Each fully covered step means one fewer new distinct value can be produced by extending into the suffix — subtract 1 from the cross-boundary budget.
+3. Each fully covered step means one fewer new distinct value can be produced by extending into the suffix. Subtract 1 from the cross boundary budget.
 4. **Caching**: `state_cov[v]` memoises the coverage depth per SAM state within each extension evaluation, avoiding redundant BFS walks.
 
-The net effect is that the SAM savings term subtracts a provably correct amount from the naïve `ones(q) × m` cross-boundary estimate, making the UB significantly tighter. This is the key innovation that makes the B&B solver tractable for n > 80.
+The net effect is that the SAM savings term subtracts a provably correct amount from the naive `ones(q) × m` cross boundary estimate, making the UB significantly tighter. This is the key innovation that makes the B&B solver tractable for n > 80.
 
 ### Lookahead
 
-The solver uses a multi-tier lookahead system:
+The solver uses a multi tier lookahead system:
 
 | Tier | When Used | Lookahead L | SAM JMAX |
 | --- | --- | --- | --- |
 | Base | Default UB | 2 | 2 |
-| Refined | Near-threshold: incumbent ≤ UB ≤ incumbent + margin | L + 1 | 3 |
+| Refined | Near threshold: incumbent ≤ UB ≤ incumbent + margin | L + 1 | 3 |
 | Adaptive | Cascade: base first, refine only if UB is within margin of incumbent | 2 → 3 | 2 → 3 |
 
-**Base lookahead** (L = 2): enumerate all 2^L = 4 two-bit extensions of the prefix, build the SAM for each, compute the UB, and return the maximum. This is the default for every node.
+**Base lookahead** (L = 2): enumerate all 2^L = 4 two bit extensions of the prefix, build the SAM for each, compute the UB, and return the maximum. This is the default for every node.
 
-**Refined lookahead** (L = 3): used only when the base UB is tantalizingly close to the incumbent (within `refine_margin`, default 2). The extra lookahead bit and deeper SAM BFS (JMAX = 3 vs 2) often prove that the branch is actually suboptimal, saving the cost of exploring it. The dynamic margin widens near leaf depth to catch more near-misses.
+**Refined lookahead** (L = 3): used only when the base UB is tantalisingly close to the incumbent (within `refine_margin`, default 2). The extra lookahead bit and deeper SAM BFS (JMAX = 3 vs 2) often prove that the branch is actually suboptimal, saving the cost of exploring it. The dynamic margin widens near leaf depth to catch more near misses.
 
 ### Provability
 
 The B&B solver produces a mathematically rigorous proof that the returned a(n) is optimal:
 
-1. **Completeness**: every n-bit string beginning with `1` is either explicitly scored or its entire subtree is pruned by an upper bound that is provably ≥ the true maximum achievable by any string in that subtree.
+1. **Completeness**: every length n binary string beginning with `1` is either explicitly scored or its entire subtree is pruned by an upper bound that is provably ≥ the true maximum achievable by any string in that subtree.
 2. **UB correctness**: the upper bound formula uses only (a) exact scoring of known prefixes via the SAM, (b) proven values a(m) for smaller m, and (c) combinatorial arguments that overcount (never undercount) the number of new distinct values that the unknown suffix can add.
-3. **a(m) integrity**: the `known_values.py` file contains only values proven by either Fuller (n ≤ 80) or prior B&B runs. Heuristic values (from MH or structured search) are **never** used in the UB formula — using an underestimate of a(m) could cause incorrect pruning.
-4. **Incumbent seeding**: the initial lower bound is seeded from MH heuristic results when available (this is safe — it only makes pruning more aggressive, never causes incorrect pruning). If no heuristic is available, the search still finds the correct answer; it just explores more nodes.
+3. **a(m) integrity**: the `known_values.py` file contains only values proven by either Fuller (n ≤ 80) or prior B&B runs. Heuristic values from MH or structured search are **never** used in the UB formula. Using an underestimate of a(m) could cause incorrect pruning.
+4. **Incumbent seeding**: the initial lower bound is seeded from MH heuristic results when available. This is safe because it only makes pruning more aggressive and never causes incorrect pruning. If no heuristic is available, the search still finds the correct answer; it just explores more nodes.
 5. **`collect_all=True`**: when enabled, the solver continues searching even after finding the optimum, collecting every string that achieves it. The returned `num_optimal` count is exact (not a lower bound).
 
 ### Result Format
@@ -384,18 +384,18 @@ Representative timings on a 16-core machine (15 workers, `collect_all=True`, L=2
 | n | a(n) | # optimal | Nodes expanded | Time |
 | --- | --- | --- | --- | --- |
 | 20 | 131 | 19 | 58 | 8 s |
-| 50 | 899 | — | ~10⁵ | ~30 s |
+| 50 | 899 | not recorded | ~10⁵ | ~30 s |
 | 80 | 2,423 | 10 | ~10⁷ | ~20 min |
 | 100 | 3,875 | 535 | ~10⁹ | ~12 h |
 | 111 | 4,826 | 80 | ~3.7×10¹⁰ | ~59 h |
 
-The node count grows roughly 3–5× per increment of n, so each additional value beyond n = 111 requires substantially more compute.
+The node count grows roughly 3 to 5× per increment of n, so each additional value beyond n = 111 requires substantially more compute.
 
 ---
 
 ## Scoring
 
-All algorithms share the same inner loop. For small n (≲ 30) a brute-force hash-set over all O(n²) substrings is used. For larger n, the count is computed exactly in O(n log n) via the suffix-array/LCP identity.
+All algorithms share the same inner loop. For small n (≲ 30) a brute force hash set over all O(n²) substrings is used. For larger n, the count is computed exactly in O(n log n) via the suffix array and LCP identity.
 
 ### Suffix Array (SA)
 
@@ -403,14 +403,14 @@ The **suffix array** SA of a string s of length n is a permutation of {0, 1, ...
 
 ### LCP Array and Kasai's Algorithm
 
-The **LCP array** LCP has LCP[i] = length of the longest common prefix between the suffixes at consecutive SA positions. **Kasai's algorithm** computes the full LCP array in O(n) time and O(n) space from the suffix array. In this codebase Kasai's algorithm is compiled to native machine code with Numba's JIT compiler, giving a further 10–50× speedup over a pure Python implementation.
+The **LCP array** LCP has LCP[i] = length of the longest common prefix between the suffixes at consecutive SA positions. **Kasai's algorithm** computes the full LCP array in O(n) time and O(n) space from the suffix array. In this codebase Kasai's algorithm is compiled to native machine code with Numba's JIT compiler, giving a further 10 to 50× speedup over a pure Python implementation.
 
 ### The Scoring Identity
 
-The key observation is that two substrings represent the same non-negative integer if and only if they are identical after stripping leading zeros. It follows that:
+The key observation is that two substrings represent the same nonnegative integer if and only if they are identical after stripping leading zeros. It follows that:
 
 ```text
-distinct values = (1 if any 0-bit present) + (# distinct substrings starting with '1')
+distinct values = (1 if any zero bit is present) + (# distinct substrings starting with '1')
 ```
 
 Summing only over positions where the suffix starts with `1`:
@@ -419,15 +419,13 @@ Summing only over positions where the suffix starts with `1`:
 f(s) = Σ_{i: s[SA[i]] = '1'}  (n − SA[i] − LCP[i])  +  𝟙[0 ∈ s]
 ```
 
-Each term `(n − SA[i] − LCP[i])` counts the substrings that begin at SA[i], start with `1`, and are not a prefix of the lexicographically preceding leading-1 suffix. The entire computation runs in O(n) time once the SA and LCP arrays are available, making the full scoring pipeline O(n log n).
-
----
+Each term `(n − SA[i] − LCP[i])` counts the substrings that begin at SA[i], start with `1`, and are not a prefix of the lexicographically preceding leading 1 suffix. The entire computation runs in O(n) time once the SA and LCP arrays are available, making the full scoring pipeline O(n log n).
 
 ## Other Algorithms
 
 ### 1. Brute Force (`src/algorithms/brute_force.py`)
 
-Exhaustive enumeration of all 2^(n−1) candidate n-bit strings (leading bit is always 1). For each string, computes the set of distinct integer values from all O(n²) substrings.
+Exhaustive enumeration of all 2^(n−1) candidate length n binary strings (leading bit is always 1). For each string, computes the set of distinct integer values from all O(n²) substrings.
 
 **Use for**: n ≤ 20 (exact, complete enumeration).
 
@@ -437,10 +435,10 @@ python -m src.algorithms.brute_force
 
 ### 2. Evaluate (`src/algorithms/evaluate.py`)
 
-Counts distinct substring values for a single bit-string using a suffix-array approach.
+Counts distinct substring values for a single bit string using a suffix array approach.
 
 ```bash
-# Score a specific bit-string
+# Score a specific bit string
 python -m src.algorithms.evaluate 11111101111111001111101011110110
 
 # Pipe from stdin
@@ -449,19 +447,19 @@ echo 1101 | python -m src.algorithms.evaluate
 
 ### 3. Structured Search (`src/algorithms/structured_search.py`)
 
-**Use for**: n ≤ 150 (exact, certified results).
+**Use for**: n ≤ 150 as a heuristic structural search. It agrees with every certified exact value for n < 112, but it is not a proof method for larger n.
 
-Exploits the observed structural template: all optimal strings have the form of a long leading 1-block followed by alternating 0-separator blocks and decreasing 1-blocks. Block-size bounds are manually determined from previously known optimal strings, reducing the search to enumerating integer tuples within tight windows. Results for n ≤ 80 are cross-validated against Fuller's OEIS values; n = 81–150 are certified by agreement with unconstrained MH.
+Exploits an observed structural template: certified optima have a long leading 1 block followed by alternating zero separator blocks and decreasing 1 blocks. The block size bounds are inferred from observed optimal structures, reducing the search to enumerating integer tuples within tight windows. This makes the method extremely useful, and it agrees with all exact values through n = 111. For n ≥ 112 its results remain heuristic evidence unless branch and bound later proves them.
 
 ```bash
 python -m src.algorithms.structured_search
 ```
 
-### 4. Metropolis-Hastings MCMC (`src/algorithms/MH_algorithm.py`)
+### 4. Metropolis Hastings MCMC (`src/algorithms/MH_algorithm.py`)
 
-**Use for**: n = 1–~1000 (heuristic; reliably finds the true optimum for all n ≤ 150).
+**Use for**: n = 1 to ~1000 as a probabilistic heuristic. It agrees with every certified exact value through n = 111, but it does not certify optimality.
 
-Operates on run-length encodings with five move types (transfer, split, merge, swap, multi-transfer). Geometric cooling with periodic reheating. Despite having no structural priors, unconstrained MH reliably recovers the true optimum for all n ≤ 150, confirming that the block template is a natural attractor of the score landscape.
+Operates on run length encodings with five move types (transfer, split, merge, swap, multi transfer). Geometric cooling with periodic reheating. Despite having no structural priors, unconstrained MH repeatedly finds the certified optima through n = 111 and agrees strongly with the structured search records beyond that. This is independent evidence for the block template, not a proof.
 
 ```bash
 python -m src.algorithms.MH_algorithm
@@ -469,35 +467,33 @@ python -m src.algorithms.MH_algorithm
 
 ### 5. Greedy Search (`src/algorithms/greedy_search.py`)
 
-Template-based construction exploiting the linear scaling pattern. Fast initial lower bound for any n.
+Template based construction exploiting the linear scaling pattern. Fast initial lower bound for any n.
 
 ```bash
 python -m src.algorithms.greedy_search
 ```
 
-### 6. Large-n Lower Bound (`src/algorithms/large_n_lower_bound.py`)
+### 6. Large n Lower Bound (`src/algorithms/large_n_lower_bound.py`)
 
 Computes mathematically valid lower bounds for n ≥ 3,000 by counting only a chosen subset of substrings exactly. Used as a library by other scripts (e.g. `score_1B.py`).
 
 ### 7. Surgical Nudge (`src/algorithms/surgical_nudge.py`)
 
-Local refinement starting from a known good seed. Identifies the highest-LCP collision in the suffix array and makes the smallest density-preserving bit-swap to break it. The only method capable of making progress at n ≥ 10⁸.
+Local refinement starting from a known good seed. Identifies the highest LCP collision in the suffix array and makes the smallest density preserving bit swap to break it. This is the main practical method for improving records at n ≥ 10⁸.
 
 ```bash
 python -m src.algorithms.surgical_nudge
 ```
 
----
-
 ## Tools
 
 | Script | Purpose |
 | -------- | --------- |
-| `generate_oeis_bfiles.py` | Export all sequences to OEIS b-file format in `data/oeis/` |
-| `enhance_cached_results.py` | Add A112510/A112511/A156022–A156024 to `cached_results.json` |
+| `generate_oeis_bfiles.py` | Export all sequences to OEIS b file format in `data/oeis/` |
+| `enhance_cached_results.py` | Add A112510, A112511, and A156022 to A156024 to `cached_results.json` |
 | `debruijn_analysis.py` | Compute minimum de Bruijn embedding order for each optimal string |
 | `compute_hamming.py` | Compute min/max/mean pairwise Hamming distances between optimal solutions |
-| `distribution.py` | Full distribution of distinct-value counts across all 2^n strings |
+| `distribution.py` | Full distribution of distinct value counts across all 2^n strings |
 
 Run any tool with:
 
@@ -511,57 +507,57 @@ python -m src.tools.<tool_name>
 
 Interactive presentation of all computed results:
 
-- Sequence values and all optimal strings (tabbed by groups of 10)
-- Structural analysis: block counts, 1-density, run lengths, K_common
+- Sequence values and all optimal strings or best known strings (tabbed by groups of 10)
+- Structural analysis: block counts, 1 density, run lengths, K_common
 - K_common vs n charts
 - Hamming distance analysis between optimal solutions
 - Growth analysis: Δa, ΔΔa, a(n)/n, a(n)/n²
 
 ### Results Comparison (`notebooks/A112509_Results_Comparison.ipynb`)
 
-Cross-validates three independent methods for n = 80–200:
+Compares three independent methods for n = 80 to 200:
 
-- Unbounded Metropolis-Hastings
-- Bounded (constrained) Metropolis-Hastings
-- Exhaustive block-template search
+- Unbounded Metropolis Hastings
+- Bounded constrained Metropolis Hastings
+- Heuristic structured search
 
 ## Data Files
 
 ### `data/oeis/`
 
-Two classes of OEIS-formatted data files:
+Two classes of OEIS formatted data files:
 
-- **a-files** (`a*.txt`): contain only rigorously proven values (Fuller n ≤ 80, branch-and-bound n = 81–111). Suitable for OEIS submission.
-- **b-files** (`b*.txt`): contain best-known values including heuristic estimates beyond the proven range. The b-file format permits best-known values.
+- **a files** (`a*.txt`): contain only rigorously proven values (Fuller n ≤ 80, branch and bound n = 81 to 111). Suitable for OEIS submission.
+- **b files** (`b*.txt`): contain best known values including heuristic estimates beyond the proven range. The b file format permits best known values.
 
 ### `results/branch_bound_exact/`
 
-Proven B&B results for individual values of n. Each file contains `a(n)`, all optimal strings, structural metadata (`K_common`, `common_seps`), and solver statistics (nodes expanded, elapsed time, etc.).
+Proven branch and bound results for individual values of n. Each file contains `a(n)`, all optimal strings, structural metadata (`K_common`, `common_seps`), and solver statistics (nodes expanded, elapsed time, etc.).
 
 ### `data/cached_results.json`
 
-Authoritative results for n = 1–150, including structural metadata and all optimal strings.
+Authoritative exact entries for n = 1 to 111, including structural metadata and all optimal strings. Entries after n = 111 are best known heuristic records or lower bound data and should not be cited as exact unless later certified by branch and bound.
 
 ### `data/reference/known_values.py`
 
-Proven exact values used by the B&B solver's upper bound formula. Contains only values proven by Fuller (n ≤ 80) or prior B&B runs (n = 81–110). **Never** includes heuristic values — using an underestimate of a(m) in the UB formula could cause incorrect pruning.
+Proven exact values used by the B&B solver's upper bound formula. Contains only values proven by Fuller (n ≤ 80) or prior branch and bound runs (n = 81 to 110). **Never** includes heuristic values. Using an underestimate of a(m) in the UB formula could cause incorrect pruning.
 
 ## Configuration
 
 ### `config/learned_bounds.json`
 
-Structural constraints discovered from analysing optimal solutions, used by `structured_search.py`.
+Structural constraints inferred from analysed optimal solutions and best known strings, used by the heuristic `structured_search.py`.
 
 ### `config/search_constraints.json`
 
-Per-n structural constraints for n ≥ 81, used by the bounded MH algorithm.
+Per n structural constraints for n ≥ 81, used by the bounded MH algorithm.
 
 ## Typical Workflows
 
 ### Prove the next exact value
 
 ```bash
-# Run branch-and-bound for n = 112
+# Run branch and bound for n = 112
 python run_branch_bound.py --n 112
 
 # Results saved to results/branch_bound_exact/n_0112_results.json
@@ -585,19 +581,20 @@ python run_branch_bound.py --n 114
 2. Refine with `surgical_nudge.py`
 3. Score the final string with `evaluate.py`
 
-### Validate MH results against exact search
+### Check heuristic candidates
 
 1. Run MH (bounded and/or unbounded) for the target n
-2. Run branch-and-bound or exhaustive `structured_search.py` if feasible
+2. Run branch and bound when a proof is required and computationally feasible
 3. Compare in `A112509_Results_Comparison.ipynb`
+4. Treat structured search and MH agreement as evidence, not certification
 
 ## Second Differences
 
 Define the first difference Δa(n) = a(n) − a(n−1) and the second difference Δ²a(n) = Δa(n) − Δa(n−1). Since a(n) ≈ n²/2, one expects Δa(n) ≈ n and Δ²a(n) ≈ 1. The precise behaviour is striking.
 
-> **Observation.** For all n ≤ 200, Δ²a(n) ∈ {0, 1, 2}. The values 0 and 1 alternate in a near-regular pattern. The value 2 occurs at n = 52, 71, 117, 157, 178, 191, and 194 (bold in the tables below).
+> **Observation.** For all certified values n ≤ 111, and for the best known continuation through n ≤ 200, Δ²a(n) ∈ {0, 1, 2}. The values 0 and 1 alternate in a near regular pattern. The value 2 occurs at n = 52, 71, 117, 157, 178, 191, and 194 (bold in the tables below).
 
-The predominance of Δ²a(n) ∈ {0, 1} reflects the fact that Δa(n) increases by exactly 0 or 1 at each step, a remarkable regularity for a sequence defined by a combinatorial optimisation. The rare value 2 is associated with a simultaneous resolution of two de Bruijn order tiers at step n−1.
+The predominance of Δ²a(n) ∈ {0, 1} reflects the fact that Δa(n) increases by exactly 0 or 1 at each step, a remarkable regularity for a sequence defined by a combinatorial optimisation. In the certified and best known data, the rare value 2 is associated with a simultaneous resolution of two de Bruijn order tiers at step n−1.
 
 > **Conjecture.** Δ²a(n) ∈ {0, 1, 2} for all n ≥ 1.
 
@@ -605,8 +602,8 @@ The predominance of Δ²a(n) ∈ {0, 1} reflects the fact that Δa(n) increases 
 
 | n | a(n) | Δa | Δ²a |
 | --: | -----: | ---: | ----: |
-| 1 | 1 | – | – |
-| 2 | 3 | 2 | – |
+| 1 | 1 | n/a | n/a |
+| 2 | 3 | 2 | n/a |
 | 3 | 5 | 2 | 0 |
 | 4 | 7 | 2 | 0 |
 | 5 | 10 | 3 | 1 |
@@ -660,7 +657,7 @@ Note: Δ²a(n) ∈ {0, 1} throughout this range.
 
 ### Table 2: a(n) and Δ²a(n) for n = 51 to 200
 
-Bold entries mark occurrences of Δ²a(n) = 2. Values for n ≤ 111 are exact from branch-and-bound; n = 112–150 are exact from exhaustive structured search (certified by MH agreement); n = 151–200 are best-known values from independent MH runs.
+Bold entries mark occurrences of Δ²a(n) = 2. Values for n ≤ 111 are exact, with Fuller certifying n ≤ 80 and branch and bound certifying n = 81 to 111. Values for n = 112 to 200 are best known heuristic records from structured search and independent MH runs. They are not certified exact values.
 
 | n | a(n) | Δ²a | n | a(n) | Δ²a | n | a(n) | Δ²a | n | a(n) | Δ²a |
 | --: | -----: | ----: | --: | -----: | ----: | --: | -----: | ----: | --: | -----: | ----: |
@@ -707,21 +704,21 @@ Bold entries mark occurrences of Δ²a(n) = 2. Values for n ≤ 111 are exact fr
 
 The following open problems are suggested by the computational findings.
 
-**(i) Asymptotic rate.** The limit lim a(n)/n² = 1/2 is proved (Clare, 2026). The quantitative bound is a(n) ≥ n²/2 − 15n^{3/2} for n ≥ 64, but the constant 15 is not tight and the true sub-leading coefficient is unknown. Closing the gap between the lower bound O(n^{3/2}) and the upper bound O(n) would be progress.
+**(i) Asymptotic rate.** The limit lim a(n)/n² = 1/2 is proved (Clare, 2026). The quantitative bound is a(n) ≥ n²/2 − 15n^{3/2} for n ≥ 64, but the constant 15 is not tight and the true subleading coefficient is unknown. Closing the gap between the lower bound O(n^{3/2}) and the upper bound O(n) would be progress.
 
-**(ii) Separator structure.** Prove or disprove that the zero-separator sequence (1, 2, 1, 1, ...) is universal for all sufficiently large n. Can the full separator sequence be determined analytically? The second separator being 2 while all others are 1 is a highly non-trivial constraint whose origin is not understood.
+**(ii) Separator structure.** Prove or disprove that the zero separator sequence (1, 2, 1, 1, ...) is universal for all sufficiently large n. Can the full separator sequence be determined analytically? The second separator being 2 while all others are 1 is a highly nontrivial constraint whose origin is not understood.
 
 **(iii) Second differences.** Prove that Δ²a(n) ∈ {0, 1, 2} for all n. This would require understanding the growth rate of Δa(n) with precision.
 
-**(iv) Exact values.** Extend the branch-and-bound computation beyond n = 111. Each additional value requires a substantial increase in the search budget; reaching n = 150 by B&B appears to require many CPU-months with the current solver. Multi-machine sharding may make this tractable.
+**(iv) Exact values.** Extend the branch and bound computation beyond n = 111. Each additional value requires a substantial increase in the search budget; reaching n = 150 by B&B appears to require many CPU months with the current solver. Multi machine sharding may make this tractable.
 
-**(v) One-bit density.** It is now proved that every optimal string has ones-density 1 − O(n^{−1/4}) (Clare, 2026). The empirical rate at large n is far tighter: the best-known seeds have density 0.999950 at n = 10⁹ and 0.999964 at n = 2 × 10⁹, suggesting the true rate is 1 − O(n^{−1}) or faster. Proving this sharper rate remains open.
+**(v) One bit density.** It is now proved that every optimal string has ones density 1 − O(n^{−1/4}) (Clare, 2026). The empirical rate at large n is far tighter: the best known seeds have density 0.999950 at n = 10⁹ and 0.999964 at n = 2 × 10⁹, suggesting the true rate is 1 − O(n^{−1}) or faster. Proving this sharper rate remains open.
 
-**(vi) Alphabet generalisation.** What is the analogous sequence for ternary (base-3) or higher-base alphabets? Does the ratio a_q(n)/n² for base q approach (q−1)/2 or some other constant?
+**(vi) Alphabet generalisation.** What is the analogous sequence for ternary (base 3) or higher base alphabets? Does the ratio a_q(n)/n² for base q approach (q−1)/2 or some other constant?
 
 ## Project History and AI Assistance
 
-This project spanned several months of active research and consumed thousands of hours of CPU time across multiple machines. What began as a straightforward brute-force exploration of the sequence grew into a multi-layered computational investigation requiring increasingly sophisticated algorithms at each scale barrier.
+This project spanned several months of active research and consumed thousands of hours of CPU time across multiple machines. What began as a straightforward brute force exploration of the sequence grew into a layered computational investigation requiring increasingly sophisticated algorithms at each scale barrier.
 
 The work was carried out with substantial assistance from **Claude Sonnet 4.6** and **Claude Opus 4.6** (Anthropic). These AI systems contributed throughout the project with performance optimisation: identifying bottlenecks and profiling, and code implementation: writing, debugging and iterating on all major modules, test suites, and analysis tools.
 
@@ -731,17 +728,17 @@ The pipeline was not designed upfront, it evolved iteratively as each approach h
 
 1. **Brute force**: exhaustive enumeration of all 2^(n−1) strings worked to n ≈ 40 but was computationally intractable beyond that.
 
-2. **Block-structure discovery**: manual inspection of brute-force solutions revealed the run-length pattern. This motivated a block-template search that extended exact results to n ≈ 60.
+2. **Block structure discovery**: manual inspection of brute force solutions revealed the run length pattern. This motivated the structured search heuristic. It agrees with all certified exact values less than n = 112, but it does not by itself prove global optimality.
 
-3. **Suffix-array scoring**: as n grew past 30, the O(n²) substring hash-set became the bottleneck. The key insight that distinct positive integer values equal distinct leading-1 suffixes in the suffix array, countable via the LCP array, reduced scoring from O(n²) to O(n log n).
+3. **Suffix array scoring**: as n grew past 30, the O(n²) substring hash set became the bottleneck. The key insight that distinct positive integer values equal distinct leading 1 suffixes in the suffix array, countable via the LCP array, reduced scoring from O(n²) to O(n log n).
 
-4. **Metropolis–Hastings MCMC**: to escape the constraint-design bottleneck and provide independent validation, an unconstrained MH search was built operating directly on run-length encodings. Five move types (transfer, split, merge, swap, multi-transfer) ensure ergodicity.
+4. **Metropolis Hastings MCMC**: to escape the constraint design bottleneck and provide independent evidence, an unconstrained MH search was built operating directly on run length encodings. Five move types (transfer, split, merge, swap, multi transfer) ensure ergodicity.
 
-5. **Greedy and large-n seeding**: pushing to n in the thousands required template-based greedy construction using the observed linear scaling of block sizes.
+5. **Greedy and large n seeding**: pushing to n in the thousands required template based greedy construction using the observed linear scaling of block sizes.
 
-6. **Surgical nudge**: at n ≥ 10⁶, targeted local improvement guided by the suffix array structure — the only method capable of making progress at n = 10⁸ and above.
+6. **Surgical nudge**: at n ≥ 10⁶, targeted local improvement guided by the suffix array structure became the main practical method for making progress at n = 10⁸ and above.
 
-7. **Branch-and-bound**: the definitive exact solver. Parallel DFS with SAM-based upper-bound pruning, Numba-JIT inner loops, shared-incumbent propagation, and adaptive work-splitting. Extended proven values from n = 80 to n = 111 (and counting).
+7. **Branch and bound**: the definitive exact solver. Parallel DFS with SAM based upper bound pruning, Numba JIT inner loops, shared incumbent propagation, and adaptive work splitting. Extended proven values from n = 80 to n = 111 and counting.
 
 ## Licence
 
