@@ -73,8 +73,8 @@
 \begin{abstract}
 % -----------------------------------------------------------------------
 For a binary string $s$ of length~$n$, let $f(s)$ denote the number of
-distinct non-negative integers whose binary representations appear as
-contiguous substrings of~$s$ (leading zeros suppressed), and set
+distinct non-negative integers obtained by reading contiguous substrings
+of~$s$ as binary numerals, with leading zeros ignored, and set
 $a(n) = \max_{|s|=n} f(s)$.  This is OEIS sequence A112509.
 
 We prove that
@@ -147,6 +147,8 @@ problem and appears as OEIS A112509~\cite{oeis}.
   representation has length~$n$; this value is not represented in~$s$.
   Hence $f(t) > f(s)$.
 
+  It remains only to consider the case in which $u$ contains no zero,
+  i.e. $u = \mathtt{1}^{n-1}$.
   If $u = \mathtt{1}^{n-1}$, then
   $V(s) = \{0,1,3,\ldots,2^{n-1}-1\}$ has size~$n$.  But
   the string $\mathtt{1}^{x}\mathtt{0}^{y}$ with
@@ -270,7 +272,8 @@ number of ones and zeros in~$s$.
 
 If $s$ has $1$-runs of lengths $\ell_1,\ldots,\ell_p$ and $0$-runs of
 lengths $m_1,\ldots,m_q$, set
-$L(s) = \max_t \ell_t$ and $K(s) = \max_t m_t$.
+$L(s) = \max_t \ell_t$ and $K(s) = \max_t m_t$, with the convention
+that the maximum of an empty set is~$0$.
 
 The \emph{first difference} is $\Da(n) = a(n) - a(n{-}1)$ and, for
 $n \ge 2$, the \emph{second difference} is
@@ -677,10 +680,11 @@ by a factor exceeding~$4$.
 \end{proposition}
 
 \begin{proof}
-  Take $s_n$ from~\eqref{eq:string}.  By Theorem~\ref{thm:quant},
+  For $n \ge 64$, take $s_n$ from~\eqref{eq:string}.  By Theorem~\ref{thm:quant},
   $f(s_n) \ge n^2/2 - 15n^{3/2}$.  The string contains exactly
   $k - 1 \le \sqrt{n}/4$ zeros, so
   $\ones(s_n)/n \ge 1 - 1/(4\sqrt{n})$.
+  The finitely many smaller values of~$n$ may be filled in arbitrarily.
 \end{proof}
 
 \subsection{The zero-position penalty}
@@ -730,8 +734,9 @@ by a factor exceeding~$4$.
 \begin{proof}
   Let $z_n = \zeros(s_n^*)$.  By Theorem~\ref{thm:lower},
   $a(n) > n = f(\mathtt{1}^n)$ for $n \ge 5$, so an optimal string
-  has $z_n \ge 1$ in the range relevant to the asymptotic claim.  By
-  Theorem~\ref{thm:quant-sharp} and Lemma~\ref{lem:zero-pos}:
+  has $z_n \ge 1$ in the range relevant to the asymptotic claim.  For
+  $n \ge 36$, Theorem~\ref{thm:quant-sharp} and Lemma~\ref{lem:zero-pos}
+  give
   \[
     \frac{n^2}{2} - \frac{13}{4}\,n^{3/2}
     \le a(n)
@@ -1095,9 +1100,9 @@ convexity with the global asymptotic lower bound.
   $E(n) = n(n{+}1)/2 - a(n)$ immediately tightens the second-difference
   bound via Theorem~\ref{thm:dda-upper}.  If the conjectured
   $E(n) = \Theta(n^{3/2})$ is optimal, the method yields
-  $\DDa(n) = O(n^{3/4})$ and cannot reach the empirical bound
-  $\DDa(n) \le 2$ without a fundamentally different structural
-  argument.
+  $\DDa(n) = O(n^{3/4})$, far short of the empirical bound
+  $\DDa(n) \le 2$.  Closing that gap appears to require additional
+  structural information.
 \end{remark}
 
 % =======================================================================
@@ -1169,7 +1174,7 @@ inside the fixed prefix and can be detected via the suffix automaton
   $i \le k$ with $p_i = 1$, define $d_i$ to be the largest
   integer $d$ such that the SAM state reached by the suffix $p[i..k]$
   has a complete binary transition subtree of depth~$d$.  Equivalently,
-  for every $0 \le j \le d$ and every binary string
+  for every $1 \le j \le d$ and every binary string
   $w \in \{0,1\}^j$, the word $p[i..k] \cdot w$ occurs in~$p$, so its
   value already lies in $V_0(p)$.  Then
   \[
@@ -1356,8 +1361,10 @@ standard suffix-array argument applies because every positive value is
 identified with its unique leading-$\mathtt{1}$ representation:
 prefixes of a suffix that are not longer than its LCP with the
 preceding suffix have already occurred, and longer prefixes are new.
-The computation runs in $O(n \log n)$ time, or $O(n)$ using the DivSufSort
-library~\cite{pydivsufsort} for suffix array construction.
+Thus one scoring pass for a fixed string takes $O(n \log n)$ time, or
+$O(n)$ when the suffix array is constructed with the DivSufSort
+library~\cite{pydivsufsort}.  This is distinct from the size of the
+branch-and-bound search tree considered below.
 
 \subsection{Branch-and-bound exact solver}\label{sec:bb-solver}
 
@@ -1397,8 +1404,9 @@ The algorithm (pseudocode below) proceeds as follows:
   \item At each node, compute $U(p)$.  In value-only mode, prune when
     $U(p) \le L$; in \texttt{collect\_all} mode, prune only when
     $U(p) < L$, so branches that may contain further optima are kept.
-  \item At a leaf ($k = n$), evaluate $f(s)$ exactly and update $L$
-    if $f(s) > L$.
+  \item At a leaf ($k = n$), evaluate $f(s)$ exactly.  If $f(s)>L$,
+    update $L$ and, in \texttt{collect\_all} mode, clear the current
+    optimum list; if $f(s)=L$, record~$s$ in that list.
   \item On termination, $L = a(n)$.
 \end{enumerate}
 
@@ -1413,7 +1421,7 @@ $L \gets \text{initial lower bound}$ \\
 \textbf{return} $L$ \\[4pt]
 \textsc{Search}$(p,\; \mathcal{S},\; |V_0|,\; \ones(p))$ \\
 \quad $k \gets |p|$; \quad $m \gets n - k$ \\
-\quad \textbf{if} $k = n$: \quad $L \gets \max(L, f(p))$; \quad \textbf{return} \\
+\quad \textbf{if} $k = n$: \quad update $L$ and optimum records; \quad \textbf{return} \\
 \quad Compute $d_i$ for each one-position $i$ via SAM~$\mathcal{S}$ \\
 \quad $U \gets |V_0| + B(m) + \sum_{i:\, p_i=1} (m - d_i)^+$ \\
 \quad \textbf{if} \textsc{Prunable}$(U,L)$: \quad \textbf{return} \\
@@ -1452,6 +1460,9 @@ mode and $U \le L$ in value-only mode.
   operations.  Parallel search is performed across multiple workers,
   each exploring a subtree rooted at a distinct prefix of length
   $\approx 20$.  Workers share the incumbent~$L$ via atomic updates.
+  This affects only the order in which leaves are visited; in
+  \texttt{collect\_all} mode the certificate is the final unordered set
+  of strings attaining the maximum, not the discovery order.
   Typical running times range from seconds ($n \le 90$) to
   $\sim\!48$ hours ($n = 111$) on a 16-core workstation.
 
@@ -1484,11 +1495,13 @@ mode and $U \le L$ in value-only mode.
 \begin{proof}
   Fuller's A$^*$ search certifies the range $1 \le n \le 80$, with the
   corresponding optimal-string and companion-sequence data recorded in
-  the source table.  For $81 \le n \le 111$, the branch-and-bound
+  the source table.  The branch-and-bound extension is then certified
+  sequentially for $n=81,82,\ldots,111$.  At the run for a given~$n$,
+  every residual length $m<n$ has already been certified, so the
   computation described in Section~\ref{sec:bb-solver}, run in
-  \texttt{collect\_all} mode, uses
-  the certified values for smaller residuals as exact upper bounds
-  $B(m)=a(m)$.  Hence the upper bound $U(p)$ is certified at every
+  \texttt{collect\_all} mode, may use the certified values for smaller
+  residuals as exact upper bounds $B(m)=a(m)$.  Hence the upper bound
+  $U(p)$ is certified at every
   search node.  Exhaustive exploration of all branches not pruned then
   proves the optimum.  Since \texttt{collect\_all} mode does not prune
   branches with $U(p)=a(n)$, every string attaining the optimum is
@@ -1562,9 +1575,10 @@ suffix-array library~\cite{pydivsufsort}.
 \begin{remark}
   Theorem~\ref{thm:quant-sharp} gives
   $a(n)/n^2 \ge 1/2 - 13/(4\sqrt{n})$, which reaches $0.4875$ only at
-  $n = 14{,}400$.  The computational lower bounds substantially
-  exceed the theoretical bound at moderate~$n$, indicating that the
-  constant $13/4$ in the $n^{3/2}$ term is far from tight in practice.
+  $n = 14{,}400$.  At moderate values of~$n$, the computational lower
+  bounds lie well above this conservative theoretical estimate,
+  indicating that the constant $13/4$ is not close to the behaviour of
+  the explicit strings found in practice.
 \end{remark}
 
 % =======================================================================
