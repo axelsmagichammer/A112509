@@ -94,7 +94,7 @@ The following certified lower bounds, computed using the surgical nudge algorith
 | 10,000 | 48,490,001 | 0.4849 |
 | 1,000,000 | 498,396,662,200 | 0.4984 |
 | 1,000,000,000 | 499,943,911,277,037,650 | 0.49994 |
-| 2,000,000,000 | 1,999,841,302,297,432,600 | 0.49996 |
+| 2,000,000,000 | 1,999,841,243,789,594,574 | 0.49996 |
 
 The computation at n = 2 × 10⁹ required scoring a two billion bit string (approximately 238 MB as a NumPy boolean array) using the `pydivsufsort` C library. The ratio a(n)/n² converges rapidly to the proved limit of 1/2 and is within 0.004% at n = 2 × 10⁹.
 
